@@ -1,7 +1,8 @@
 ﻿using FluentValidation;
 using FluentValidation.Results;
 using Mediator;
-using UMS.SharedKernal;
+using System.Reflection;
+using UMS.SharedKernel;
 
 namespace UMS.Application.Common.Behaviors
 {
@@ -38,8 +39,6 @@ namespace UMS.Application.Common.Behaviors
             if (validationFailures.Any())
             {
                 // Validation failed, create a failure Result.
-                // We need to create the specific TResponse type (Result or Result<T>)
-                // with the validation errors.
                 return CreateValidationResult<TResponse>(validationFailures);
             }
 
@@ -53,49 +52,52 @@ namespace UMS.Application.Common.Behaviors
         private static TResult CreateValidationResult<TResult>(List<ValidationFailure> failures)
             where TResult : Result
         {
-            // Combine validation failures into a single Error object or multiple errors.
-            // For simplicity, let's take the first error message for now.
-            // A better approach might concatenate messages or return a structured error.
             var error = new Error(
-                 "Validation.Failure", // Generic validation code
-                 failures.FirstOrDefault()?.ErrorMessage ?? "Validation failed.", // First message
-                 ErrorType.Validation);
+                "Validation.Failure",
+                failures.FirstOrDefault()?.ErrorMessage ?? "Validation failed.",
+                ErrorType.Validation);
 
-
-            // Check if TResult is Result<T> or just Result
             if (typeof(TResult).IsGenericType && typeof(TResult).GetGenericTypeDefinition() == typeof(Result<>))
             {
-                // It's Result<TValue>
-                // Get the TValue type
                 Type valueType = typeof(TResult).GetGenericArguments()[0];
 
-                // Get the static Failure<TValue> method from the non-generic Result class
-                var failureMethod = typeof(Result)
-                    .GetMethod(nameof(Result.Failure), System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
-                    ?.MakeGenericMethod(valueType);
+                // Correctly find the generic Result.Failure<TValue>(Error) method
+                var genericFailureMethodDefinition = typeof(Result)
+                    .GetMethods(BindingFlags.Public | BindingFlags.Static)
+                    .FirstOrDefault(m =>
+                        m.Name == nameof(Result.Failure) &&
+                        m.IsGenericMethodDefinition && // Ensure it IS the generic one
+                        m.GetGenericArguments().Length == 1 && // Expects one generic type argument
+                        m.GetParameters().Length == 1 &&
+                        m.GetParameters()[0].ParameterType == typeof(Error)
+                    );
 
-                if (failureMethod != null)
+                if (genericFailureMethodDefinition != null)
                 {
-                    // Invoke Result.Failure<TValue>(error)
-                    return (TResult)failureMethod.Invoke(null, new object[] { error })!;
+                    var concreteFailureMethod = genericFailureMethodDefinition.MakeGenericMethod(valueType);
+                    return (TResult)concreteFailureMethod.Invoke(null, new object[] { error })!;
                 }
             }
             else if (typeof(TResult) == typeof(Result))
             {
-                // It's the non-generic Result
-                // Get the static Failure method from the non-generic Result class
+                // More specific retrieval for the non-generic Result.Failure(Error)
                 var failureMethod = typeof(Result)
-                   .GetMethod(nameof(Result.Failure), System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static, null, new[] { typeof(Error) }, null);
+                    .GetMethods(BindingFlags.Public | BindingFlags.Static)
+                    .FirstOrDefault(m =>
+                        m.Name == nameof(Result.Failure) &&
+                        !m.IsGenericMethodDefinition && // Ensure it's not the generic one
+                        m.GetParameters().Length == 1 &&
+                        m.GetParameters()[0].ParameterType == typeof(Error) &&
+                        m.ReturnType == typeof(Result) // Match return type
+                    );
 
                 if (failureMethod != null)
                 {
-                    // Invoke Result.Failure(error)
                     return (TResult)failureMethod.Invoke(null, new object[] { error })!;
                 }
             }
 
-            // Fallback or throw if we couldn't create the result via reflection
-            throw new InvalidOperationException($"Could not create validation failure result for type {typeof(TResult).Name}");
+            throw new InvalidOperationException($"Could not create validation failure result for type {typeof(TResult).Name}. Error: {error.Code} - {error.Message}");
         }
     }
 }

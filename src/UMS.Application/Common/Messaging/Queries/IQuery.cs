@@ -1,5 +1,5 @@
 ﻿using Mediator;
-using UMS.SharedKernal;
+using UMS.SharedKernel;
 
 namespace UMS.Application.Common.Messaging.Queries
 {

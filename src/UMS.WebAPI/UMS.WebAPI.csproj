@@ -11,4 +11,11 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Mediator\Mediator.csproj" />
+    <ProjectReference Include="..\UMS.Application\UMS.Application.csproj" />
+    <ProjectReference Include="..\UMS.Infrastructure\UMS.Infrastructure.csproj" />
+    <ProjectReference Include="..\UMS.SharedKernal\UMS.SharedKernel.csproj" />
+  </ItemGroup>
+
 </Project>

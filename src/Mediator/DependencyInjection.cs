@@ -24,6 +24,7 @@ namespace Mediator
             // might still need manual registration or more specific scanning.
 
             return services;
+
         }
     }
 }

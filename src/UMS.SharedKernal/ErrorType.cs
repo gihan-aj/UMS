@@ -1,4 +1,4 @@
-﻿namespace UMS.SharedKernal
+﻿namespace UMS.SharedKernel
 {
     /// <summary>
     /// Defines types of errors for categorization.

@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using FluentValidation;
 using Mediator;
 using Microsoft.Extensions.DependencyInjection;
 using UMS.Application.Common.Behaviors;
@@ -11,8 +12,34 @@ namespace UMS.Application
         {
             var applicationAssembly = Assembly.GetExecutingAssembly();
 
-            services.AddCustomMediator(applicationAssembly);
+            // 1. Register your custom Mediator (ISender, IPublisher)
+            // This call assumes AddCustomMediator from your UMS.Mediator project
+            // is responsible for registering the Mediator class, ISender, and IPublisher.
+            // The AddCustomMediator method should NOT be responsible for scanning application handlers.
+            services.AddCustomMediator(); // Pass assemblies only if AddCustomMediator scans for *its own* generic behaviors
 
+            // 2. Register FluentValidation services and validators from this assembly
+            services.AddValidatorsFromAssembly(applicationAssembly);
+
+            // 3. Register all IRequestHandler<,> (and thus ICommandHandler<,>, IQueryHandler<,>)
+            //    and INotificationHandler<> implementations from this assembly (UMS.Application)
+            services.Scan(scan => scan
+                .FromAssemblies(applicationAssembly)
+                // Register all classes implementing IRequestHandler<TRequest, TResponse>
+                .AddClasses(classes => classes.AssignableTo(typeof(IRequestHandler<,>)))
+                    .AsImplementedInterfaces() // Registers them as IRequestHandler<TRequest, TResponse>
+                    .WithTransientLifetime()   // Handlers are typically transient
+
+                // Register all classes implementing IRequestHandler<TRequest> (for commands/requests without a value in TResponse)
+                .AddClasses(classes => classes.AssignableTo(typeof(IRequestHandler<>)))
+                    .AsImplementedInterfaces() // Registers them as IRequestHandler<TRequest>
+                    .WithTransientLifetime());
+
+            // 4. Register Pipeline Behaviors
+            // These are application-specific pipeline behaviors.
+            // If LoggingBehavior and ValidationPipelineBehavior are generic and defined in UMS.Application,
+            // they can be registered as open generics.
+            // The order of registration for pipeline behaviors can be important.
             services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
             services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationPipelineBehavior<,>));
 

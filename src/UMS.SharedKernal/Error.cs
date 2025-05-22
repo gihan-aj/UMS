@@ -1,4 +1,4 @@
-﻿namespace UMS.SharedKernal
+﻿namespace UMS.SharedKernel
 {
     /// <summary>
     /// Represents an error that occurred during an operation.

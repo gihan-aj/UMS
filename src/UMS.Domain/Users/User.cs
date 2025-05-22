@@ -1,4 +1,6 @@
-﻿namespace UMS.Domain.Users
+﻿using System;
+
+namespace UMS.Domain.Users
 {
     public class User //This is the aggregate root for the User context. Consider adding a base class like Entity or AggregateRoot later
     {

@@ -1,0 +1,57 @@
+﻿using UMS.Application.Abstractions.Persistence;
+using UMS.Domain.Users;
+
+namespace UMS.Infrastructure.Persistence.Repositories
+{
+    public class InMemoryUserRepository : IUserRepository
+    {
+        // Static list to act as our in-memory data store.
+        // In a real DI setup with singleton lifetime for this repo, static might not be needed,
+        // but for simplicity and ensuring data persists across requests (if repo is transient/scoped),
+        // static makes it behave more like a shared store.
+        private static readonly List<User> _users = new List<User>();
+        private static readonly object _lock = new object(); // For basic thread safety
+
+        public Task AddAsync(User user)
+        {
+            if (user == null)
+            {
+                throw new ArgumentNullException(nameof(user));
+            }
+
+            lock (_lock)
+            {
+                // Simulate a primary key constraint / uniqueness for ID if needed, though GUIDs are generally unique.
+                if (_users.Any(u => u.Id == user.Id))
+                {
+                    // This scenario should ideally be rare with GUIDs.
+                    // In a real DB, this would be a PK violation.
+                    throw new InvalidOperationException($"User with ID {user.Id} already exists in the in-memory store.");
+                }
+                // Email uniqueness is checked by the handler before calling AddAsync.
+                _users.Add(user);
+            }
+            return Task.CompletedTask;
+        }
+
+        public Task<bool> ExistsByEmailAsync(string email)
+        {
+            bool exists;
+            lock (_lock)
+            {
+                exists = _users.Any(u => u.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
+            }
+            return Task.FromResult(exists);
+        }
+
+        public Task<User?> GetByEmailAsync(string email)
+        {
+            User? user;
+            lock (_lock)
+            {
+                user = _users.FirstOrDefault(u => u.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
+            }
+            return Task.FromResult(user);
+        }
+    }
+}

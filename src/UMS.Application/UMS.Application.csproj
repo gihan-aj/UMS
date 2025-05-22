@@ -14,7 +14,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Mediator\Mediator.csproj" />
-    <ProjectReference Include="..\UMS.SharedKernal\UMS.SharedKernal.csproj" />
+    <ProjectReference Include="..\UMS.Domain\UMS.Domain.csproj" />
+    <ProjectReference Include="..\UMS.SharedKernal\UMS.SharedKernel.csproj" />
   </ItemGroup>
 
 </Project>

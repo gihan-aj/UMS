@@ -1,4 +1,4 @@
-﻿namespace UMS.SharedKernal
+﻿namespace UMS.SharedKernel
 {
     /// <summary>
     /// Represents the outcome of an operation that does not return a value on success.
