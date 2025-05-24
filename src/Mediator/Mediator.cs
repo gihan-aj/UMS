@@ -8,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Mediator
 {
-    public class Mediator : ISender
+    public class Mediator : ISender, IPublisher
     {
         private readonly IServiceProvider _serviceProvider;
 
