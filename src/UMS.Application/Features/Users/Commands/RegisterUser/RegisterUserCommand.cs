@@ -1,4 +1,5 @@
-﻿using UMS.Application.Common.Messaging.Commands;
+﻿using System;
+using UMS.Application.Common.Messaging.Commands;
 
 namespace UMS.Application.Features.Users.Commands.RegisterUser
 {

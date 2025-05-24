@@ -3,6 +3,8 @@ using FluentValidation;
 using Mediator;
 using Microsoft.Extensions.DependencyInjection;
 using UMS.Application.Common.Behaviors;
+using UMS.Application.Features.Users.NotificationHandlers;
+using UMS.Application.Features.Users.Notifications;
 
 namespace UMS.Application
 {
@@ -33,7 +35,11 @@ namespace UMS.Application
                 // Register all classes implementing IRequestHandler<TRequest> (for commands/requests without a value in TResponse)
                 .AddClasses(classes => classes.AssignableTo(typeof(IRequestHandler<>)))
                     .AsImplementedInterfaces() // Registers them as IRequestHandler<TRequest>
-                    .WithTransientLifetime());
+                    .WithTransientLifetime()
+
+                .AddClasses(classes => classes.AssignableTo(typeof(INotificationHandler<>))) // Ensure this line exists and uses the correct INotificationHandler interface
+                    .AsImplementedInterfaces()
+                    .WithTransientLifetime()); 
 
             // 4. Register Pipeline Behaviors
             // These are application-specific pipeline behaviors.
@@ -42,6 +48,10 @@ namespace UMS.Application
             // The order of registration for pipeline behaviors can be important.
             services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
             services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationPipelineBehavior<,>));
+
+            // If you prefer explicit registration or if the scan isn't picking them up:
+            services.AddTransient<INotificationHandler<UserCreatedNotification>, SendWelcomeEmailOnUserCreatedHandler>();
+            services.AddTransient<INotificationHandler<UserCreatedNotification>, LogUserActivityOnUserCreatedHandler>();
 
             return services;
         }

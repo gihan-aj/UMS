@@ -1,4 +1,5 @@
-﻿using UMS.Domain.Users;
+﻿using System.Threading.Tasks;
+using UMS.Domain.Users;
 
 namespace UMS.Application.Abstractions.Persistence
 {
