@@ -14,6 +14,11 @@ namespace UMS.Infrastructure
             // It's stateless, so Transient or Scoped are fine. Singleton could also work.
             services.AddTransient<IPasswordHasherService, PasswordHasherService>();
 
+            // Register the ReferenceCodeGeneratorService
+            // This in-memory version can be a singleton for now as it uses a static ConcurrentDictionary.
+            // A database-backed one would likely be Scoped or Transient depending on DbContext lifetime.
+            services.AddSingleton<IReferenceCodeGeneratorService, ReferenceCodeGeneratorService>();
+
             // Register the InMemoryUserRepository
             // For an in-memory store that needs to persist data across requests in a web app,
             // Singleton is the appropriate lifetime. If it were a real DB context, Scoped would be used.
@@ -23,7 +28,6 @@ namespace UMS.Infrastructure
             // And you would also register your DbContext here:
             // services.AddDbContext<YourApplicationDbContext>(options =>
             //    options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
-
 
             return services;
         }

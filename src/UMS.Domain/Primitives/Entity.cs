@@ -12,7 +12,7 @@ namespace UMS.Domain.Primitives
         /// <summary>
         /// Gets the entity's identifier.
         /// </summary>
-        public TId Id { get; protected init; } // init for immutability after creation
+        public TId Id { get; protected init; } = default!; // init for immutability after creation
 
         protected Entity(TId id)
         {
