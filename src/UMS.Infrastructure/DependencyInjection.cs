@@ -1,6 +1,10 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using System;
 using UMS.Application.Abstractions.Persistence;
 using UMS.Application.Abstractions.Services;
+using UMS.Infrastructure.Persistence;
 using UMS.Infrastructure.Persistence.Repositories;
 using UMS.Infrastructure.Services;
 
@@ -8,8 +12,40 @@ namespace UMS.Infrastructure
 {
     public static class DependencyInjection
     {
-        public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
+        public static IServiceCollection AddInfrastructureServices(
+            this IServiceCollection services,
+            IConfiguration configuration)
         {
+            // --- Database Context Registration ---
+            services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"),
+                    // Optional: configure SQL Server specific options
+                    sqlServerOptionsAction: sqlOptions =>
+                    {
+                        // Specify the assembly where migrations are located.
+                        // This tells EF Core to look for migrations in the UMS.Infrastructure assembly.
+                        // When you run Add-Migration, ensure UMS.Infrastructure is the default project.
+                        // EF Core will then create/use a "Migrations" folder within this project structure.
+                        // To place it under Persistence/Migrations, ensure your DbContext is in Persistence
+                        // or manage the folder structure manually after generation if needed, though
+                        // EF Core typically creates "Migrations" at the root of the migrationsAssembly.
+                        // For better control, you can specify the output directory for migrations
+                        // via the -OutputDir parameter in Add-Migration command, e.g.,
+                        // Add-Migration InitialCreate -OutputDir Persistence/Migrations
+                        sqlOptions.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName); // More robust
+                        // Or: sqlOptions.MigrationsAssembly(Assembly.GetExecutingAssembly().FullName);
+
+                        // Enable retry on failure, useful for transient connection issues (e.g., Azure SQL)
+                        sqlOptions.EnableRetryOnFailure(
+                            maxRetryCount: 5,
+                            maxRetryDelay: TimeSpan.FromSeconds(30),
+                            errorNumbersToAdd: null);
+                    }));
+
+            // --- Unit of Work Registration ---
+            // UnitOfWork depends on ApplicationDbContext, so it should have a similar lifetime (Scoped).
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
+
             // Register the PasswordHasherService
             // It's stateless, so Transient or Scoped are fine. Singleton could also work.
             services.AddTransient<IPasswordHasherService, PasswordHasherService>();
@@ -19,15 +55,10 @@ namespace UMS.Infrastructure
             // A database-backed one would likely be Scoped or Transient depending on DbContext lifetime.
             services.AddSingleton<IReferenceCodeGeneratorService, ReferenceCodeGeneratorService>();
 
-            // Register the InMemoryUserRepository
-            // For an in-memory store that needs to persist data across requests in a web app,
-            // Singleton is the appropriate lifetime. If it were a real DB context, Scoped would be used.
-            services.AddSingleton<IUserRepository, InMemoryUserRepository>();
-            // WHEN YOU MOVE TO A REAL DATABASE (e.g., with EF Core):
-            // services.AddScoped<IUserRepository, YourEfCoreUserRepository>();
-            // And you would also register your DbContext here:
-            // services.AddDbContext<YourApplicationDbContext>(options =>
-            //    options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+            // --- Repository Implementations ---
+            // Replace InMemoryUserRepository with EfCoreUserRepository.
+            // Repositories using a Scoped DbContext should also be Scoped.
+            services.AddScoped<IUserRepository, EfCoreUserRepository>();
 
             return services;
         }
