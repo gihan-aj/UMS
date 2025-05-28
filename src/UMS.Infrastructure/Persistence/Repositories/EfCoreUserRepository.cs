@@ -34,11 +34,12 @@ namespace UMS.Infrastructure.Persistence.Repositories
         {
             if (string.IsNullOrWhiteSpace(email))
             {
-                return false; // Or throw
+                return false;
             }
-            // The .Users DbSet will automatically apply the HasQueryFilter(u => !u.IsDeleted)
+            // Convert both sides to lower case for case-insensitive comparison.
+            string lowerEmail = email.ToLowerInvariant();
             return await _dbContext.Users
-                .AnyAsync(u => u.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
+                .AnyAsync(u => u.Email.ToLower() == lowerEmail);
         }
 
         public async Task<User?> GetByEmailAsync(string email)

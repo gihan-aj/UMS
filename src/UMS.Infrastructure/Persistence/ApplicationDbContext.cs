@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using System.Linq;
 using System.Reflection;
 using UMS.Domain.Users;
+using UMS.Infrastructure.Persistence.Entities;
 
 namespace UMS.Infrastructure.Persistence
 {
@@ -15,6 +16,8 @@ namespace UMS.Infrastructure.Persistence
 
         // DbSet for each Aggregate Root
         public DbSet<User> Users { get; set; } = null!; // null-forgiving operator, EF will initialize it
+
+        public DbSet<EntitySequence> EntitySequences { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
