@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UMS.SharedKernel;
 
 namespace UMS.WebAPI.Common
@@ -29,27 +30,41 @@ namespace UMS.WebAPI.Common
 
         private static IResult MapErrorToHttpResult(Error error)
         {
-            // Create an error response object. You can customize this.
+            if(error.Type == ErrorType.Validation && error.ValidationErrors.Any())
+            {
+                // Convert our ValidationErrorDetail list to the dictionary format expected by ValidationProblem
+                var validationErrorDictionary = error.ValidationErrors
+                    .GroupBy(e => e.PropertyName)
+                    .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
+
+                return Results.ValidationProblem(
+                    errors: validationErrorDictionary,
+                    detail: error.Message, // The overall message like "One or more validation errors occured."
+                    title: "Validation Error", // Consistent title
+                    statusCode: StatusCodes.Status400BadRequest);
+            }
+
+            // Fallback for other error types or validation errors without specific details
             var errorResponse = new
             {
                 title = GetTitleForErrorType(error.Type),
                 status = GetStatusCodeForErrorType(error.Type),
                 detail = error.Message,
                 code = error.Code,
-                // You could add more details, like a list of validation errors if Error.Message was structured
+                errors = error.ValidationErrors.Any() ? error.ValidationErrors : null, // Optionally include raw validation errors
             };
 
             return error.Type switch
             {
-                ErrorType.Validation => Results.ValidationProblem(
-                    errors: new Dictionary<string, string[]> { { error.Code ?? "Validation", new[] { error.Message } } }, // Simplified for now
-                    detail: error.Message,
-                    title: "Validation Error",
-                    statusCode: StatusCodes.Status400BadRequest
-                ), // Or Results.BadRequest(errorResponse)
+                // Validation already handled
                 ErrorType.NotFound => Results.NotFound(errorResponse),
                 ErrorType.Conflict => Results.Conflict(errorResponse),
-                ErrorType.Unauthorized => Results.Unauthorized(), // Or Results.Problem with details
+                ErrorType.Unauthorized => Results.Problem(
+                                        detail: error.Message,
+                                        statusCode: StatusCodes.Status401Unauthorized,
+                                        title: "Unauthorized",
+                                        extensions: new Dictionary<string, object?> { { "errorCode", error.Code } }
+                                    ),
                 ErrorType.Failure => Results.Problem(
                                         detail: error.Message,
                                         statusCode: StatusCodes.Status500InternalServerError,

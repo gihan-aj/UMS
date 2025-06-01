@@ -33,7 +33,7 @@ namespace UMS.WebAPI.Endpoints
                 var result = await mediator.Send(command);
                 return result.ToHttpResult(
                     onSuccess: (userId) => Results.CreatedAtRoute(
-                        routeName: "GetUserId",
+                        routeName: "GetUserById",
                         routeValues: new { Version = "1", id = userId }, // Ensure version is in routeValues for CreatedAtRoute
                         value: new { UserId = userId }
                         )
