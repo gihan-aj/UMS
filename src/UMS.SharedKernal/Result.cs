@@ -31,9 +31,9 @@
         {
             // Basic validation: A successful result should not have a specific error.
             // A failed result must have an error.
-            if (isSuccess && error != Error.None)
+            if (isSuccess && error != Error.None && error.Type != ErrorType.None)
             {
-                throw new InvalidOperationException("A successful result cannot have an error.");
+                throw new InvalidOperationException("A successful result cannot have a specific error (unless it's Error.None)..");
             }
             if (!isSuccess && error == Error.None)
             {

@@ -3,7 +3,7 @@
     /// <summary>
     /// Represents an error that occurred during an operation.
     /// </summary>
-    public sealed record Error(string Code, string Message, ErrorType Type = ErrorType.Failure)
+    public sealed record Error
     {
         /// <summary>
         /// Represents no error. Used for successful results.
@@ -34,5 +34,41 @@
         /// Represents a conflict error (e.g., resource already exists).
         /// </summary>
         public static readonly Error Conflict = new("General.Conflict", "A conflict occurred with the current state of the resource.", ErrorType.Conflict);
+
+        public string Code { get; }
+
+        public string Message { get; }
+
+        public ErrorType Type { get; }
+
+        public IReadOnlyCollection<ValidationErrorDetail> ValidationErrors { get; }
+
+        // Constructor for general errors
+        public Error(string code, string message, ErrorType type)
+            : this(code, message, type, Array.Empty<ValidationErrorDetail>())
+        {
+
+        }
+
+        // Constructor for validation errors
+        public Error(string code, string message, ErrorType type, IReadOnlyCollection<ValidationErrorDetail> validationErrors)
+        {
+            Code = code;
+            Message = message;
+            Type = type;
+            ValidationErrors = validationErrors ?? Array.Empty<ValidationErrorDetail>();
+        }
+
+        // Factory method for creating a validation error with multiple details
+        public static Error Validation(string code, string overallMessage, IReadOnlyCollection<ValidationErrorDetail> errors)
+        {
+            return new Error(code, overallMessage, ErrorType.Validation, errors);
+        }
+        
+        public static Error Validation(string code, string overallMessage, ValidationErrorDetail error)
+        {
+            return new Error(code, overallMessage, ErrorType.Validation, new[] { error });
+        }
+
     }
 }

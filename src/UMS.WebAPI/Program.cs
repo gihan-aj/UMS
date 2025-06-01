@@ -1,18 +1,52 @@
-using Mediator;
+using Asp.Versioning;
+using Asp.Versioning.ApiExplorer;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using System;
 using UMS.Application;
-using UMS.Application.Features.Users.Commands.RegisterUser;
 using UMS.Infrastructure;
-using UMS.WebAPI.Common;
+using UMS.WebAPI.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
 builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);
+
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+
+// --- API Versioning Setup ---
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ReportApiVersions = true; // Adds api-supported-versions and api-deprecated-versions headers
+    options.ApiVersionReader = ApiVersionReader.Combine(
+        new UrlSegmentApiVersionReader() // Reads version from URL segment (e.g., /api/v1/...)
+                                         // new QueryStringApiVersionReader("api-version"), // Reads version from query string (?api-version=1.0)
+                                         // new HeaderApiVersionReader("X-Api-Version")    // Reads version from HTTP header (X-Api-Version: 1.0)
+    );
+})
+.AddApiExplorer(options => // Integrates with Swagger/OpenAPI
+{
+    // Format the version as "'v'major[.minor][-status]" (e.g., v1.0, v2, v1-beta)
+    options.GroupNameFormat = "'v'VVV";
+    // Substitute the version into the route template so Swagger UI can differentiate versions
+    options.SubstituteApiVersionInUrl = true;
+});
+
+builder.Services.AddSwaggerGen(options =>
+{
+    // Swagger setup will be adjusted by AddApiExplorer for versioning
+    // If you have custom Swagger options, keep them here.
+    // Example: options.SwaggerDoc("v1", new OpenApiInfo { Title = "UMS API v1", Version = "v1" });
+    // The AddApiExplorer will handle creating documents per API version.
+});
+
+builder.Services.AddLogging(configure => configure.AddConsole());
 
 var app = builder.Build();
 
@@ -20,46 +54,19 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    // Swagger UI setup to display different API versions
+    var apiVersionDescriptionProvider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+    app.UseSwaggerUI(options =>
+    {
+        foreach(var description in apiVersionDescriptionProvider.ApiVersionDescriptions)
+        {
+            options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json",
+                description.GroupName.ToUpperInvariant());
+        }
+    });
 }
 
 app.UseHttpsRedirection();
-
-// --- Minimal API Endpoints ---
-
-// POST /api/users/register
-app.MapPost("/api/users/register", async (
-    RegisterUserCommand command,
-    ISender mediator // Inject ISender (from MediatR or your custom UMS.Mediator)
-    ) =>
-{
-    var result = await mediator.Send(command);
-
-    // Use the extension method to convert Result<Guid> to IResult
-    return result.ToHttpResult(
-        onSuccess: (userId) => Results.CreatedAtRoute( // Or Results.Ok(new { UserId = userId })
-            routeName: "GetUserById", // Define this route if you have a GET endpoint for users
-            routeValues: new { id = userId },
-            value: new { UserId = userId }
-        )
-    );
-})
-.WithName("RegisterUser")
-.WithTags("Users")
-.Produces<object>(StatusCodes.Status201Created) // Success response type (adjust if needed)
-.ProducesProblem(StatusCodes.Status400BadRequest) // For validation errors
-.ProducesProblem(StatusCodes.Status409Conflict)   // For user already exists
-.ProducesProblem(StatusCodes.Status500InternalServerError);
-
-
-// Example: Placeholder for GetUserById (needed for CreatedAtRoute)
-app.MapGet("/api/users/{id:guid}", (Guid id) =>
-{
-    // In a real app, you'd have a query to fetch the user
-    return Results.Ok(new { Id = id, Message = "User details would be here (placeholder)" });
-})
-.WithName("GetUserById") // This name is used by CreatedAtRoute
-.WithTags("Users");
 
 // ---- DEBUGGING CODE START ----
 using (var scope = app.Services.CreateScope())
@@ -102,5 +109,8 @@ using (var scope = app.Services.CreateScope())
     }
 }
 // ---- DEBUGGING CODE END ----
+
+// --- Map Organized Minimal API Endpoints ---
+app.MapUserApiEndpoints();
 
 app.Run();
