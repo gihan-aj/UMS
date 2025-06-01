@@ -8,6 +8,7 @@ using System;
 using UMS.Application;
 using UMS.Infrastructure;
 using UMS.WebAPI.Endpoints;
+using UMS.WebAPI.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,7 +51,11 @@ builder.Services.AddLogging(configure => configure.AddConsole());
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// --- Configure the HTTP request pipeline ---
+
+// IMPORTANT: Register Global Exception Handling Middleware early in the pipeline.
+app.UseGlobalExceptionHandling();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
