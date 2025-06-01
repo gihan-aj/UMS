@@ -2,7 +2,7 @@
 
 ## 🚀 Overview
 
-This project is the backend for a User Management System (UMS), envisioned as a Single Sign-On (SSO) platform. It's built using .NET 7/8 (adjust as per your version) with a focus on Clean Architecture principles and modern development practices. A key learning objective and feature of this project was the implementation of a custom Mediator pattern from scratch, mimicking functionalities of popular libraries like MediatR.
+This project is the backend for a User Management System (UMS), envisioned as a Single Sign-On (SSO) platform. It's built using .NET 8 with a focus on Clean Architecture principles and modern development practices. A key learning objective and feature of this project was the implementation of a custom Mediator pattern from scratch, mimicking functionalities of popular libraries like MediatR.
 
 This system provides a robust foundation for managing users, including registration, and is designed to be extensible for features like login, profile management, account activation, and more.
 
