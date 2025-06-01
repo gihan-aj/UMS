@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.OpenApi.Models;
 using System;
 using UMS.Application;
 using UMS.Infrastructure;
@@ -45,6 +46,7 @@ builder.Services.AddSwaggerGen(options =>
     // If you have custom Swagger options, keep them here.
     // Example: options.SwaggerDoc("v1", new OpenApiInfo { Title = "UMS API v1", Version = "v1" });
     // The AddApiExplorer will handle creating documents per API version.
+    options.SwaggerDoc("v1", new OpenApiInfo { Title = "UMS API", Version = "v1" });
 });
 
 builder.Services.AddLogging(configure => configure.AddConsole());
