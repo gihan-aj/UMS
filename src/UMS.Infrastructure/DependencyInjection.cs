@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using UMS.Application.Abstractions.Persistence;
 using UMS.Application.Abstractions.Services;
+using UMS.Infrastructure.Authentication.Settings;
 using UMS.Infrastructure.Persistence;
 using UMS.Infrastructure.Persistence.Repositories;
 using UMS.Infrastructure.Services;
@@ -45,6 +46,13 @@ namespace UMS.Infrastructure
             // --- Unit of Work Registration ---
             // UnitOfWork depends on ApplicationDbContext, so it should have a similar lifetime (Scoped).
             services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+            // --- Authentication/Authorization Settings & Services ---
+            // Bind JwtSettings from appsettings.json to the JwtSettings class
+            services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
+            // Register the JWT token generator service
+            services.AddSingleton<IJwtTokenGeneratorService, JwtTokenGeneratorService>();
+            // Singleton is fine for JwtTokenGeneratorService as it's stateless and configured via IOptions<JwtSettings>
 
             // Register the PasswordHasherService
             // It's stateless, so Transient or Scoped are fine. Singleton could also work.

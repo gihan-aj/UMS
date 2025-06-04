@@ -50,8 +50,9 @@ namespace UMS.Infrastructure.Persistence.Repositories
             }
 
             // The .Users DbSet will automatically apply the HasQueryFilter(u => !u.IsDeleted)
+            string lowerEmail = email.ToLowerInvariant();
             return await _dbContext.Users
-                .FirstOrDefaultAsync(u => u.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
+                .FirstOrDefaultAsync(u => u.Email.ToLower() == lowerEmail);
         }
 
         // You might add other methods here as needed, for example:
