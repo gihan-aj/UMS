@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using UMS.Application.Abstractions.Persistence;
 using UMS.Domain.Users;
@@ -56,12 +57,13 @@ namespace UMS.Infrastructure.Persistence.Repositories
         }
 
         // You might add other methods here as needed, for example:
-        public async Task<User?> GetByIdAsync(Guid id)
+        public async Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
         {
-            return await _dbContext.Users.FindAsync(id); // FindAsync respects query filters if the entity is not already tracked.
-                                                         // If tracked and soft-deleted, it might return it.
-                                                         // A safer bet for GetById that respects soft delete:
-                                                         // return await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == id);
+            return await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == id, cancellationToken); 
+            // FindAsync respects query filters if the entity is not already tracked.
+            // If tracked and soft-deleted, it might return it.
+            // A safer bet for GetById that respects soft delete:
+            // return await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == id);
         }
 
         public async Task UpdateAsync(User user)

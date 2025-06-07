@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
 using UMS.Domain.Users;
 
 namespace UMS.Application.Abstractions.Persistence
@@ -10,5 +12,7 @@ namespace UMS.Application.Abstractions.Persistence
         Task AddAsync(User user);
 
         Task<bool> ExistsByEmailAsync(string email);
+
+        Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
     }
 }

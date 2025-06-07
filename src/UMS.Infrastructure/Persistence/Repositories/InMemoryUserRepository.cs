@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using UMS.Application.Abstractions.Persistence;
 using UMS.Domain.Users;
@@ -56,6 +57,11 @@ namespace UMS.Infrastructure.Persistence.Repositories
                 user = _users.FirstOrDefault(u => u.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
             }
             return Task.FromResult(user);
+        }
+
+        public Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
         }
     }
 }

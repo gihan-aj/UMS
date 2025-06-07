@@ -9,6 +9,7 @@ using UMS.Application.Features.Users.Commands.ActivateAccount;
 using UMS.Application.Features.Users.Commands.LoginUser;
 using UMS.Application.Features.Users.Commands.RegisterUser;
 using UMS.Application.Features.Users.Commands.ResendActivationEmail;
+using UMS.Application.Features.Users.Queries.GetMyProfile;
 using UMS.WebAPI.Common;
 
 namespace UMS.WebAPI.Endpoints
@@ -111,6 +112,24 @@ namespace UMS.WebAPI.Endpoints
                 .Produces(StatusCodes.Status200OK) // For successful processing (even if user not found, for security)
                 .ProducesProblem(StatusCodes.Status400BadRequest) // For validation errors (e.g., invalid email format)
                 .ProducesProblem(StatusCodes.Status500InternalServerError) // For other failures
+                .MapToApiVersion(1, 0);
+
+            // ---- Protected Endpoints ----
+
+            // GET /api/v1/users/me
+            userGroup.MapGet("/me", async (
+                ISender mediator,
+                CancellationToken cancellationToken) => 
+            {
+                var query = new GetMyProfileQuery();
+                var result = await mediator.Send(query, cancellationToken);
+                return result.ToHttpResult();
+            })
+                .RequireAuthorization() // This makes the endpoint protected!
+                .WithName("GetMyProfile")
+                .Produces<UserProfileResponse>(StatusCodes.Status200OK)
+                .ProducesProblem(StatusCodes.Status401Unauthorized) // If not authenticated
+                .ProducesProblem(StatusCodes.Status404NotFound)   // If user from token not found in DB
                 .MapToApiVersion(1, 0);
 
             // GET /api/v1/users/{id}

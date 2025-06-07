@@ -11,16 +11,22 @@ using Microsoft.OpenApi.Models;
 using System;
 using System.Text;
 using UMS.Application;
+using UMS.Application.Abstractions.Services;
 using UMS.Infrastructure;
 using UMS.Infrastructure.Authentication.Settings;
 using UMS.WebAPI.Endpoints;
 using UMS.WebAPI.Middleware;
+using UMS.WebAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);
+// Add HttpContextAccessor, which is required by CurrentUserService
+builder.Services.AddHttpContextAccessor();
+// Register our CurrentUserService
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
 // --- JWT Authentication Setup ---
 // Retrieve JwtSettings from configuration to use for token validation parameters
