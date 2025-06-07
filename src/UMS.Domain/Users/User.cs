@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Security.Cryptography;
 using UMS.Domain.Primitives;
 using UMS.Domain.Users.Events;
 
@@ -22,6 +23,11 @@ namespace UMS.Domain.Users
         public bool IsActive { get; private set; }
 
         public DateTime? LastLoginAtUtc { get; private set; }
+
+        // --- Activation Token Properties ---
+        public string? ActivationToken { get; private set; }
+
+        public DateTime? ActivationTokenExpiryUtc { get; private set; }
 
         // --- ISoftDeletable Implementation ---
         public bool IsDeleted { get; private set; }
@@ -75,11 +81,40 @@ namespace UMS.Domain.Users
             var userId = Guid.NewGuid();
             var user = new User(userId, userCode, email, passwordHash, firstName, lastName);
             user.SetCreationAudit(createdByUserId);
+            user.GenerateActivationToken(); // Generate token upon creation
 
             // Raise a domain event
-            user.RaiseDomainEvent(new UserCreatedDomainEvent(user.Id, user.Email, user.UserCode, user.CreatedAtUtc));
+            user.RaiseDomainEvent(new UserCreatedDomainEvent(user.Id, user.Email, user.UserCode, user.CreatedAtUtc, user.ActivationToken!));
 
             return user;
+        }
+
+        // --- Activation Methods ---
+        public void GenerateActivationToken(int expiryHours = 24)
+        {
+            // Generate cryptographically strong, URL-safe token
+            // Example: 32 bytes, base64 URL encoded
+            var tokenBytes = RandomNumberGenerator.GetBytes(32);
+            ActivationToken = Convert.ToBase64String(tokenBytes)
+                .TrimEnd('=') // Padding safe
+                .Replace('+', '-') // URL-safe
+                .Replace('/','_'); // URL-safe
+            ActivationTokenExpiryUtc = DateTime.UtcNow.AddHours(expiryHours);
+            IsActive = false; // Ensure user is inactive when a new token is generated
+        }
+
+        public bool ValidateActivationToken(string token)
+        {
+            if(string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(ActivationToken))
+            {
+                return false;
+            }
+            if(ActivationTokenExpiryUtc.HasValue && ActivationTokenExpiryUtc.Value < DateTime.UtcNow)
+            {
+                return false; // Token expired
+            }
+
+            return ActivationToken == token;
         }
 
         /// <summary>
@@ -87,16 +122,15 @@ namespace UMS.Domain.Users
         /// </summary>
         public void Activate(Guid? modifiedByUserId)
         {
-            if (IsActive)
-            {
-                throw new InvalidOperationException("User is already active.");
-            }
+            if (IsActive) return;
             if (IsDeleted)
             {
                 throw new InvalidOperationException("Cannot activate a deleted user.");
             }
 
             IsActive = true;
+            ActivationToken = null; // Clear the token once used
+            ActivationTokenExpiryUtc = null;
             SetModificationAudit(modifiedByUserId);
             RaiseDomainEvent(new UserAccountActivatedDomainEvent(Id, DateTime.UtcNow));
         }

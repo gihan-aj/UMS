@@ -38,7 +38,7 @@ namespace UMS.Domain.Primitives
         /// Clears all domain events from the aggregate.
         /// Called after events have been dispatched.
         /// </summary>
-        public void ClearDomainEvent()
+        public void ClearDomainEvents()
         {
             _domainEvents.Clear();
         }

@@ -7,5 +7,6 @@ namespace UMS.Domain.Users.Events
         Guid UserId,
         string Email,
         string UserCode,
-        DateTime CreatedAtUtc) : DomainEvent(Guid.NewGuid());
+        DateTime CreatedAtUtc,
+        string ActivationToken) : DomainEvent(Guid.NewGuid());
 }

@@ -54,6 +54,12 @@ namespace UMS.Infrastructure
             services.AddSingleton<IJwtTokenGeneratorService, JwtTokenGeneratorService>();
             // Singleton is fine for JwtTokenGeneratorService as it's stateless and configured via IOptions<JwtSettings>
 
+            // --- Email Service ---
+            // Register the dummy console email service.
+            // When you want to send real emails, you'll replace ConsoleEmailService
+            // with your actual implementation (e.g., SendGridEmailService).
+            services.AddTransient<IEmailService, ConsoleEmailService>();
+
             // Register the PasswordHasherService
             // It's stateless, so Transient or Scoped are fine. Singleton could also work.
             services.AddTransient<IPasswordHasherService, PasswordHasherService>();
