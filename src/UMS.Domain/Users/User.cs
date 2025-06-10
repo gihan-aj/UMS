@@ -29,6 +29,11 @@ namespace UMS.Domain.Users
 
         public DateTime? ActivationTokenExpiryUtc { get; private set; }
 
+        // --- Password Reset Properties ---
+        public string? PasswordResetToken { get; private set; }
+
+        public DateTime? PasswordResetTokenExpiryUtc { get; private set; }
+
         // --- ISoftDeletable Implementation ---
         public bool IsDeleted { get; private set; }
 
@@ -95,10 +100,7 @@ namespace UMS.Domain.Users
             // Generate cryptographically strong, URL-safe token
             // Example: 32 bytes, base64 URL encoded
             var tokenBytes = RandomNumberGenerator.GetBytes(32);
-            ActivationToken = Convert.ToBase64String(tokenBytes)
-                .TrimEnd('=') // Padding safe
-                .Replace('+', '-') // URL-safe
-                .Replace('/','_'); // URL-safe
+            ActivationToken = GenerateUrlSafeToken();
             ActivationTokenExpiryUtc = DateTime.UtcNow.AddHours(expiryHours);
             IsActive = false; // Ensure user is inactive when a new token is generated
         }
@@ -152,6 +154,33 @@ namespace UMS.Domain.Users
             IsActive = false;
             SetModificationAudit(modifiedByUserId);
             RaiseDomainEvent(new UserAccountDeactivatedDomainEvent(Id, DateTime.UtcNow));
+        }
+
+        public void GeneratePasswordResetToken(int expiryMinutes = 30)
+        {
+            PasswordResetToken = GenerateUrlSafeToken();
+            PasswordResetTokenExpiryUtc = DateTime.UtcNow.AddMinutes(expiryMinutes);
+        }
+
+        public void ResetPassword(string newPasswordHash, string providedToken)
+        {
+            if (IsDeleted) throw new InvalidOperationException("Cannot reset password for a deleted user.");
+
+            if(string.IsNullOrWhiteSpace(providedToken) || PasswordResetToken != providedToken)
+            {
+                throw new InvalidOperationException("Invalid password reset token.");
+            }
+
+            if(PasswordResetTokenExpiryUtc.HasValue && PasswordResetTokenExpiryUtc.Value < DateTime.UtcNow)
+            {
+                throw new InvalidOperationException("Password reset token has expired.");
+            }
+
+            PasswordHash = newPasswordHash;
+            PasswordResetToken = null; // invalidate the token after use.
+            PasswordResetTokenExpiryUtc = null;
+            SetModificationAudit(this.Id); // The user is the actor here
+            RaiseDomainEvent(new UserPasswordChangedDomainEvent(Id, DateTime.UtcNow));
         }
 
         /// <summary>
@@ -210,6 +239,15 @@ namespace UMS.Domain.Users
             IsActive = false; // Typically, a deleted user is also inactive.
             SetModificationAudit(deletedByUserId); // Also update modification audit
             RaiseDomainEvent(new UserSoftDeletedDomainEvent(Id, DeletedAtUtc.Value));
+        }
+
+        private static string GenerateUrlSafeToken()
+        {
+            var tokenBytes = RandomNumberGenerator.GetBytes(32);
+            return Convert.ToBase64String(tokenBytes)
+                .TrimEnd('=') // Padding safe
+                .Replace('+', '-') // URL-safe
+                .Replace('/', '_'); // URL-safe
         }
     }
 }

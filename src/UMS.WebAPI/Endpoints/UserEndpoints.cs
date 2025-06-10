@@ -8,6 +8,7 @@ using System.Threading;
 using UMS.Application.Features.Users.Commands.ActivateAccount;
 using UMS.Application.Features.Users.Commands.LoginUser;
 using UMS.Application.Features.Users.Commands.RegisterUser;
+using UMS.Application.Features.Users.Commands.RequestPasswordReset;
 using UMS.Application.Features.Users.Commands.ResendActivationEmail;
 using UMS.Application.Features.Users.Queries.GetMyProfile;
 using UMS.WebAPI.Common;
@@ -112,6 +113,21 @@ namespace UMS.WebAPI.Endpoints
                 .Produces(StatusCodes.Status200OK) // For successful processing (even if user not found, for security)
                 .ProducesProblem(StatusCodes.Status400BadRequest) // For validation errors (e.g., invalid email format)
                 .ProducesProblem(StatusCodes.Status500InternalServerError) // For other failures
+                .MapToApiVersion(1, 0);
+
+            // POST /api/v1/users/request-password-reset
+            userGroup.MapPost("/request-password-reset", async(
+                RequestPasswordResetCommand command,
+                ISender mediator,
+                CancellationToken cancellationToken) =>
+            {
+                var rsult = await mediator.Send(command, cancellationToken);
+                // For security, always return a generic success message to prvent email enumeration.
+                return Results.Ok("If an account with this email exists, a password reset email has been sent.");
+            })
+                .WithName("RequestPasswordReset")
+                .Produces(StatusCodes.Status200OK)
+                .ProducesProblem(StatusCodes.Status400BadRequest)
                 .MapToApiVersion(1, 0);
 
             // ---- Protected Endpoints ----
