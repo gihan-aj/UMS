@@ -10,6 +10,7 @@ using UMS.Application.Features.Users.Commands.LoginUser;
 using UMS.Application.Features.Users.Commands.RegisterUser;
 using UMS.Application.Features.Users.Commands.RequestPasswordReset;
 using UMS.Application.Features.Users.Commands.ResendActivationEmail;
+using UMS.Application.Features.Users.Commands.ResetPassword;
 using UMS.Application.Features.Users.Queries.GetMyProfile;
 using UMS.WebAPI.Common;
 
@@ -128,6 +129,22 @@ namespace UMS.WebAPI.Endpoints
                 .WithName("RequestPasswordReset")
                 .Produces(StatusCodes.Status200OK)
                 .ProducesProblem(StatusCodes.Status400BadRequest)
+                .MapToApiVersion(1, 0);
+
+            // POST /api/v1/users/reset-password
+            userGroup.MapPost("/reset-password", async (
+                ResetPasswordCommand command,
+                ISender mediator,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await mediator.Send(command, cancellationToken);
+                // On success, we just confirm the password has been reset.
+                return result.ToHttpResult(onSuccess: () => Results.Ok("Your password has been reset successfully."));
+            })
+                .WithName("ResetPassword")
+                .Produces(StatusCodes.Status200OK)
+                .ProducesProblem(StatusCodes.Status400BadRequest)
+                .ProducesProblem(StatusCodes.Status422UnprocessableEntity) // For invalid/expired token
                 .MapToApiVersion(1, 0);
 
             // ---- Protected Endpoints ----
