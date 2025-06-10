@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Security.Cryptography;
 using UMS.Domain.Primitives;
 using UMS.Domain.Users.Events;
@@ -10,6 +11,8 @@ namespace UMS.Domain.Users
     /// </summary>
     public class User : AggregateRoot<Guid>, ISoftDeletable
     {
+        private readonly List<RefreshToken> _refreshTokens = new();
+
         public string UserCode { get; private set; } = string.Empty;
 
         public string Email { get; private set; }
@@ -33,6 +36,9 @@ namespace UMS.Domain.Users
         public string? PasswordResetToken { get; private set; }
 
         public DateTime? PasswordResetTokenExpiryUtc { get; private set; }
+
+        public IReadOnlyCollection<RefreshToken> RefreshTokens => _refreshTokens.AsReadOnly();
+
 
         // --- ISoftDeletable Implementation ---
         public bool IsDeleted { get; private set; }
@@ -92,6 +98,21 @@ namespace UMS.Domain.Users
             user.RaiseDomainEvent(new UserCreatedDomainEvent(user.Id, user.Email, user.UserCode, user.CreatedAtUtc, user.ActivationToken!));
 
             return user;
+        }
+
+        // --- Domain Methods ---
+
+        /// <summary>
+        /// Adds a new refresh token to the user.
+        /// </summary>
+        /// <param name="deviceId">The unique identifier for the device.</param>
+        /// <param name="validity">The duration for which the refresh token is valid.</param>
+        /// <returns>The newly created RefreshToken.</returns>
+        public RefreshToken AddRefreshToken(string deviceId, TimeSpan validity)
+        {
+            var newRefreshToken = RefreshToken.Create(this, deviceId, validity);
+            _refreshTokens.Add(newRefreshToken);
+            return newRefreshToken;
         }
 
         // --- Activation Methods ---

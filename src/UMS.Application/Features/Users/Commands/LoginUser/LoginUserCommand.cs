@@ -4,5 +4,6 @@ namespace UMS.Application.Features.Users.Commands.LoginUser
 {
     public record LoginUserCommand(
         string Email,
-        string Password) : ICommand<LoginUserResponse>;
+        string Password,
+        string DeviceId) : ICommand<LoginUserResponse>;
 }

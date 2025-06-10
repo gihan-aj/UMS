@@ -1,11 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 using UMS.Application.Abstractions.Persistence;
 using UMS.Application.Abstractions.Services;
 using UMS.Application.Common.Messaging.Commands;
+using UMS.Application.Settings;
 using UMS.SharedKernel;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
@@ -17,6 +19,7 @@ namespace UMS.Application.Features.Users.Commands.ResendActivationEmail
         private readonly IUnitOfWork _unitOfWork;
         private readonly IEmailService _emailService;
         private readonly ILogger<ResendActivationEmailCommandHandler> _logger;
+        private readonly TokenSettings _tokenSettings;
         // Placeholder: This should ideally come from configuration or a dedicated service
         private const string ActivationLinkBaseUrl = "https://localhost:7026/api/v1/users/activate";
 
@@ -24,11 +27,13 @@ namespace UMS.Application.Features.Users.Commands.ResendActivationEmail
             IUserRepository userRepository,
             IUnitOfWork unitOfWork,
             IEmailService emailService,
+            IOptions<TokenSettings> tokenSettings,
             ILogger<ResendActivationEmailCommandHandler> logger)
         {
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
             _emailService = emailService;
+            _tokenSettings = tokenSettings.Value;
             _logger = logger;
         }
 
@@ -68,7 +73,7 @@ namespace UMS.Application.Features.Users.Commands.ResendActivationEmail
             // Generate a new activation token (this also sets IsActive = false and updates expiry)
             try
             {
-                user.GenerateActivationToken(); // Domain method to create a new token
+                user.GenerateActivationToken(_tokenSettings.ActivationTokenExpiryHours); // Domain method to create a new token
                 _logger.LogInformation("New activation token generated for user {UserId}, email {Email}.", user.Id, command.Email);
             }
             catch (System.Exception ex)

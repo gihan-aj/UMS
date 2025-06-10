@@ -12,6 +12,9 @@ namespace UMS.Application.Features.Users.Commands.LoginUser
 
             RuleFor(x => x.Password)
                 .NotEmpty().WithMessage("Password is required.");
+
+            RuleFor(x => x.DeviceId)
+                .NotEmpty().WithMessage("Device ID is required.");
         }
     }
 }

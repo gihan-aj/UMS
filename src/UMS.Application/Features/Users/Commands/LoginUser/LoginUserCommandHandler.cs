@@ -2,9 +2,11 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using UMS.Application.Abstractions.Persistence;
 using UMS.Application.Abstractions.Services;
 using UMS.Application.Common.Messaging.Commands;
+using UMS.Application.Settings;
 using UMS.SharedKernel;
 
 namespace UMS.Application.Features.Users.Commands.LoginUser
@@ -15,19 +17,22 @@ namespace UMS.Application.Features.Users.Commands.LoginUser
         private readonly IPasswordHasherService _passwordHasherService;
         private readonly IJwtTokenGeneratorService _jwtTokenGeneratorService;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly TokenSettings _tokenSettings;
         private readonly ILogger<LoginUserCommandHandler> _logger;
 
         public LoginUserCommandHandler(
             IUserRepository userRepository, 
             IPasswordHasherService passwordHasherService, 
             ILogger<LoginUserCommandHandler> logger, 
-            IUnitOfWork unitOfWork, 
+            IUnitOfWork unitOfWork,
+            IOptions<TokenSettings> tokenSettings,
             IJwtTokenGeneratorService jwtTokenGeneratorService)
         {
             _userRepository = userRepository;
             _passwordHasherService = passwordHasherService;
             _logger = logger;
             _unitOfWork = unitOfWork;
+            _tokenSettings = tokenSettings.Value;
             _jwtTokenGeneratorService = jwtTokenGeneratorService;
         }
 
@@ -72,6 +77,12 @@ namespace UMS.Application.Features.Users.Commands.LoginUser
             (string token, DateTime expiresAtUtc) = _jwtTokenGeneratorService.GenerateToken(user);
             _logger.LogInformation("JWT token generated for user {UserId}", user.Id);
 
+            // Use the configured value for refresh token validity
+            var refreshTokenValidity = TimeSpan.FromDays(_tokenSettings.RefreshTokenExpiryDays);
+            // Generate and add Refresh Token to the user entity
+            var refreshToken = user.AddRefreshToken(command.DeviceId, refreshTokenValidity);
+            _logger.LogInformation("Refresh token generated for user {UserId} on device {DeviceId}", user.Id, command.DeviceId);
+
             // 5. Update last login time (optional, but good practice)
             //    The User entity now has RecordLogin method
             user.RecordLogin(user.Id); // Pass user.Id as modifier for now, or setup ICurrentUserService
@@ -87,7 +98,8 @@ namespace UMS.Application.Features.Users.Commands.LoginUser
                 user.Email,
                 user.UserCode,
                 token,
-                expiresAtUtc
+                expiresAtUtc,
+                refreshToken.Token
             );
 
             _logger.LogInformation("Login successful for user {UserId}, email {Email}", user.Id, command.Email);

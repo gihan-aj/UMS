@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using UMS.Application.Abstractions.Persistence;
 using UMS.Application.Abstractions.Services;
+using UMS.Application.Settings;
 using UMS.Infrastructure.Authentication.Settings;
 using UMS.Infrastructure.Persistence;
 using UMS.Infrastructure.Persistence.Repositories;
@@ -50,6 +51,7 @@ namespace UMS.Infrastructure
             // --- Authentication/Authorization Settings & Services ---
             // Bind JwtSettings from appsettings.json to the JwtSettings class
             services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
+            services.Configure<TokenSettings>(configuration.GetSection(TokenSettings.SectionName));
             // Register the JWT token generator service
             services.AddSingleton<IJwtTokenGeneratorService, JwtTokenGeneratorService>();
             // Singleton is fine for JwtTokenGeneratorService as it's stateless and configured via IOptions<JwtSettings>
