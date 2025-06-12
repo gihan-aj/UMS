@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -77,11 +78,30 @@ namespace UMS.Application.Features.Users.Commands.LoginUser
             (string token, DateTime expiresAtUtc) = _jwtTokenGeneratorService.GenerateToken(user);
             _logger.LogInformation("JWT token generated for user {UserId}", user.Id);
 
+            // --- Revoke existing tokens for the same device ---
+            var existingTokensForDevice = user.RefreshTokens
+                .Where(rt => rt.DeviceId == command.DeviceId && rt.IsActive)
+                .ToList();
+
+            if (existingTokensForDevice.Any())
+            {
+                _logger.LogInformation("Revoking {TokenCount} existing active refresh token(s) for user {UserId} on device {DeviceId}",
+                    existingTokensForDevice.Count, user.Id, command.DeviceId);
+                foreach (var oldToken in existingTokensForDevice)
+                {
+                    oldToken.Revoke();
+                }
+            }
+
             // Use the configured value for refresh token validity
             var refreshTokenValidity = TimeSpan.FromDays(_tokenSettings.RefreshTokenExpiryDays);
             // Generate and add Refresh Token to the user entity
             var refreshToken = user.AddRefreshToken(command.DeviceId, refreshTokenValidity);
             _logger.LogInformation("Refresh token generated for user {UserId} on device {DeviceId}", user.Id, command.DeviceId);
+
+            // Explicitly add the new refresh token to the repository/DbContext
+            await _userRepository.AddRefreshTokenAsync(refreshToken, cancellationToken);
+            _logger.LogInformation("Refresh token for user {UserId} on device {DeviceId} marked for addition.", user.Id, command.DeviceId);
 
             // 5. Update last login time (optional, but good practice)
             //    The User entity now has RecordLogin method

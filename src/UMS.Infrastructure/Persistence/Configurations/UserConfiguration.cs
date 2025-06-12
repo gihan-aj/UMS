@@ -15,7 +15,7 @@ namespace UMS.Infrastructure.Persistence.Configurations
 
             builder.Property(u => u.UserCode)
                 .IsRequired()
-                .HasMaxLength(50);
+                .HasMaxLength(20);
             builder.HasIndex(u => u.UserCode)
                 .IsUnique();
 
@@ -65,7 +65,7 @@ namespace UMS.Infrastructure.Persistence.Configurations
             builder.HasQueryFilter(u => !u.IsDeleted);
 
             // --- Ignoring DomainEvents ---
-            builder.Ignore(u => u.GetDomainEvents());
+            //builder.Ignore(u => u.GetDomainEvents());
 
         }
     }

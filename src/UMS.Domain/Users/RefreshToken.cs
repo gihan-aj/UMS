@@ -30,6 +30,7 @@ namespace UMS.Domain.Users
             DeviceId = deviceId;
             Token = token;
             ExpiresAtUtc = expiresAtUtc;
+            CreatedAtUtc = DateTime.UtcNow;
         }
 
         // Required for EF Core

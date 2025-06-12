@@ -92,7 +92,7 @@ namespace UMS.Domain.Users
             var userId = Guid.NewGuid();
             var user = new User(userId, userCode, email, passwordHash, firstName, lastName);
             user.SetCreationAudit(createdByUserId);
-            user.GenerateActivationToken(); // Generate token upon creation
+            // user.GenerateActivationToken(); // Generate token upon creation
 
             // Raise a domain event
             user.RaiseDomainEvent(new UserCreatedDomainEvent(user.Id, user.Email, user.UserCode, user.CreatedAtUtc, user.ActivationToken!));

@@ -6,9 +6,11 @@ using UMS.Application.Abstractions.Persistence;
 using UMS.Application.Abstractions.Services;
 using UMS.Application.Settings;
 using UMS.Infrastructure.Authentication.Settings;
+using UMS.Infrastructure.BackgroundJobs;
 using UMS.Infrastructure.Persistence;
 using UMS.Infrastructure.Persistence.Repositories;
 using UMS.Infrastructure.Services;
+using UMS.Infrastructure.Settings;
 
 namespace UMS.Infrastructure
 {
@@ -50,8 +52,12 @@ namespace UMS.Infrastructure
 
             // --- Authentication/Authorization Settings & Services ---
             // Bind JwtSettings from appsettings.json to the JwtSettings class
+            // --- Settings Registration ---
             services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
             services.Configure<TokenSettings>(configuration.GetSection(TokenSettings.SectionName));
+            services.Configure<ClientAppSettings>(configuration.GetSection(ClientAppSettings.SectionName));
+            services.Configure<CleanupSettings>(configuration.GetSection(CleanupSettings.SectionName));
+
             // Register the JWT token generator service
             services.AddSingleton<IJwtTokenGeneratorService, JwtTokenGeneratorService>();
             // Singleton is fine for JwtTokenGeneratorService as it's stateless and configured via IOptions<JwtSettings>
@@ -75,6 +81,10 @@ namespace UMS.Infrastructure
             // Replace InMemoryUserRepository with EfCoreUserRepository.
             // Repositories using a Scoped DbContext should also be Scoped.
             services.AddScoped<IUserRepository, EfCoreUserRepository>();
+
+            // --- Background Job Registration ---
+            // Register the cleanup job as a hosted service
+            services.AddHostedService<CleanupOldRefreshTokensJob>();
 
             return services;
         }

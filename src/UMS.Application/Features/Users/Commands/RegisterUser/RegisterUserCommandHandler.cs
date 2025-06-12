@@ -5,9 +5,11 @@ using System.Threading.Tasks;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using UMS.Application.Abstractions.Persistence;
 using UMS.Application.Abstractions.Services;
 using UMS.Application.Common.Messaging.Commands;
+using UMS.Application.Settings;
 using UMS.Domain.Users;
 using UMS.SharedKernel;
 
@@ -21,9 +23,9 @@ namespace UMS.Application.Features.Users.Commands.RegisterUser
         private readonly IEmailService _emailService;
         private readonly IPublisher _publisher;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly TokenSettings _tokenSettings;
+        private readonly ClientAppSettings _clientAppSettings;
         private readonly ILogger<RegisterUserCommandHandler> _logger;
-        private const string ActivationLinkBaseUrl = "https://localhost:7026/api/v1/users/activate";
-
 
         public RegisterUserCommandHandler(
             IPasswordHasherService passwordHasherService,
@@ -32,7 +34,9 @@ namespace UMS.Application.Features.Users.Commands.RegisterUser
             ILogger<RegisterUserCommandHandler> logger,
             IReferenceCodeGeneratorService referenceCodeGeneratorService,
             IUnitOfWork unitOfWork,
-            IEmailService emailService)
+            IEmailService emailService,
+            IOptions<TokenSettings> tokenSettings,
+            IOptions<ClientAppSettings> clientAppSettings)
         {
             _passwordHasherService = passwordHasherService ?? throw new ArgumentNullException(nameof(userRepository)); ;
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(passwordHasherService));
@@ -41,6 +45,8 @@ namespace UMS.Application.Features.Users.Commands.RegisterUser
             _referenceCodeGeneratorService = referenceCodeGeneratorService ?? throw new ArgumentNullException(nameof(referenceCodeGeneratorService));
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
             _emailService = emailService;
+            _tokenSettings = tokenSettings.Value;
+            _clientAppSettings = clientAppSettings.Value;
         }
 
         public async Task<Result<Guid>> Handle(RegisterUserCommand command, CancellationToken cancellationToken)
@@ -73,6 +79,8 @@ namespace UMS.Application.Features.Users.Commands.RegisterUser
                 );
                 _logger.LogInformation("User entity created for email: {Email} with ID: {UserId}, UserCode: {UserCode}, ActivationToken: {ActivationToken}",
                     newUser.Email, newUser.Id, newUser.UserCode, newUser.ActivationToken);
+
+                newUser.GenerateActivationToken(_tokenSettings.ActivationTokenExpiryHours);
             }
             catch (ArgumentException ex)
             {
@@ -97,7 +105,7 @@ namespace UMS.Application.Features.Users.Commands.RegisterUser
                 // Send activation email AFTER user and token are saved
                 if (!string.IsNullOrEmpty(newUser.ActivationToken))
                 {
-                    string activationLink = $"{ActivationLinkBaseUrl}?token={Uri.EscapeDataString(newUser.ActivationToken)}&email={Uri.EscapeDataString(newUser.Email)}";
+                    string activationLink = $"{_clientAppSettings.ActivationLinkBaseUrl}?token={Uri.EscapeDataString(newUser.ActivationToken)}&email={Uri.EscapeDataString(newUser.Email)}";
                     string emailSubject = "Activate Your UMS Account";
                     string emailHtmlBody = $"<h1>Welcome to UMS!</h1><p>Please activate your account by clicking the link below:</p><p><a href='{activationLink}'>Activate Account</a></p><p>If you did not request this, please ignore this email.</p><p>Token: {newUser.ActivationToken}</p>"; // Token in body for easy testing
 

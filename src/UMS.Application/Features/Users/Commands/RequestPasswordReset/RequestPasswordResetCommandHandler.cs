@@ -2,9 +2,11 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using UMS.Application.Abstractions.Persistence;
 using UMS.Application.Abstractions.Services;
 using UMS.Application.Common.Messaging.Commands;
+using UMS.Application.Settings;
 using UMS.SharedKernel;
 
 namespace UMS.Application.Features.Users.Commands.RequestPasswordReset
@@ -14,19 +16,23 @@ namespace UMS.Application.Features.Users.Commands.RequestPasswordReset
         private readonly IUserRepository _userRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IEmailService _emailService;
+        private readonly TokenSettings _tokenSettings;
+        private readonly ClientAppSettings _clientAppSettings;
         private readonly ILogger<RequestPasswordResetCommandHandler> _logger;
-        // Placeholder: Base URL for the password reset page on your frontend application
-        private const string PasswordResetLinkBaseUrl = "https://your-frontend-app.com/reset-password";
 
         public RequestPasswordResetCommandHandler(
             IUserRepository userRepository, 
             IUnitOfWork unitOfWork, 
-            IEmailService emailService, 
+            IEmailService emailService,
+            IOptions<TokenSettings> tokenSettings,
+            IOptions<ClientAppSettings> clientAppSettings,
             ILogger<RequestPasswordResetCommandHandler> logger)
         {
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
             _emailService = emailService;
+            _tokenSettings = tokenSettings.Value;
+            _clientAppSettings = clientAppSettings.Value;
             _logger = logger;
         }
 
@@ -46,14 +52,14 @@ namespace UMS.Application.Features.Users.Commands.RequestPasswordReset
 
             try
             {
-                user.GeneratePasswordResetToken(); // Domain method generates new token and expiry
+                user.GeneratePasswordResetToken(_tokenSettings.PasswordResetTokenExpiryMinutes); // Domain method generates new token and expiry
                 _logger.LogInformation("Generated password reset token for user {UserId}", user.Id);
 
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
                 _logger.LogInformation("Saved password reset token for user {UserId}", user.Id);
 
                 // Send password reset email
-                string resetLink = $"{PasswordResetLinkBaseUrl}?token={Uri.EscapeDataString(user.PasswordResetToken!)}&email={Uri.EscapeDataString(user.Email)}";
+                string resetLink = $"{_clientAppSettings.PasswordResetLinkBaseUrl}?token={Uri.EscapeDataString(user.PasswordResetToken!)}&email={Uri.EscapeDataString(user.Email)}";
                 string subject = "Reset Your UMS Password";
                 string body = $"<h1>Password Reset Request</h1><p>Please reset your password by clicking the link below:</p><p><a href='{resetLink}'>Reset Password</a></p><p>This link will expire in 30 minutes.</p><p>If you did not request this, please ignore this email.</p>";
 

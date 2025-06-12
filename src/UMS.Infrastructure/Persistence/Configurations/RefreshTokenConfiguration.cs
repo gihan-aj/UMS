@@ -27,7 +27,7 @@ namespace UMS.Infrastructure.Persistence.Configurations
             builder.Property(rt => rt.RevokedAtUtc);
 
             builder.HasOne<User>()
-                .WithMany()
+                .WithMany(u => u.RefreshTokens)
                 .HasForeignKey(rt => rt.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         }

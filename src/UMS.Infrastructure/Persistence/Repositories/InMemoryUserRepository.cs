@@ -39,6 +39,11 @@ namespace UMS.Infrastructure.Persistence.Repositories
             return Task.CompletedTask;
         }
 
+        public Task AddRefreshTokenAsync(RefreshToken refreshToken, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<bool> ExistsByEmailAsync(string email)
         {
             bool exists;

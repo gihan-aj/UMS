@@ -53,13 +53,16 @@ namespace UMS.Infrastructure.Persistence.Repositories
             // The .Users DbSet will automatically apply the HasQueryFilter(u => !u.IsDeleted)
             string lowerEmail = email.ToLowerInvariant();
             return await _dbContext.Users
+                .Include(u => u.RefreshTokens)
                 .FirstOrDefaultAsync(u => u.Email.ToLower() == lowerEmail);
         }
 
         // You might add other methods here as needed, for example:
         public async Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
         {
-            return await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == id, cancellationToken); 
+            return await _dbContext.Users
+                .Include(u => u.RefreshTokens)
+                .FirstOrDefaultAsync(u => u.Id == id, cancellationToken); 
             // FindAsync respects query filters if the entity is not already tracked.
             // If tracked and soft-deleted, it might return it.
             // A safer bet for GetById that respects soft delete:
@@ -71,6 +74,11 @@ namespace UMS.Infrastructure.Persistence.Repositories
             _dbContext.Users.Update(user);
             // Again, SaveChangesAsync would be called by a Unit of Work or handler.
             await Task.CompletedTask;
+        }
+
+        public async Task AddRefreshTokenAsync(RefreshToken refreshToken, CancellationToken cancellationToken)
+        {
+            await _dbContext.RefreshTokens.AddAsync(refreshToken, cancellationToken);
         }
     }
 }

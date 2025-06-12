@@ -14,5 +14,7 @@ namespace UMS.Application.Abstractions.Persistence
         Task<bool> ExistsByEmailAsync(string email);
 
         Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
+
+        Task AddRefreshTokenAsync(RefreshToken refreshToken, CancellationToken cancellationToken);
     }
 }

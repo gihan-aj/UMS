@@ -19,6 +19,8 @@ namespace UMS.Infrastructure.Persistence
 
         public DbSet<EntitySequence> EntitySequences { get; set; } = null!;
 
+        public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
