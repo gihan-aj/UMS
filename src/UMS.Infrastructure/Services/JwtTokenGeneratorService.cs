@@ -70,5 +70,38 @@ namespace UMS.Infrastructure.Services
 
             return (token, tokenDescriptor.Expires.Value);
         }
+
+        public ClaimsPrincipal? GetPrincipalFromExpiredToken(string token)
+        {
+            var tokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidIssuer = _jwtSettings.Issuer,
+                ValidateAudience = true,
+                ValidAudience = _jwtSettings.Audience,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Secret)),
+                ValidateLifetime = false, // IMPORTANT: We don't validate the token's lifetime here
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            try
+            {
+                var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out var securityToken);
+                var jwtSecurityToken = securityToken as JwtSecurityToken;
+
+                if(jwtSecurityToken == null || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    // Token is not valid or uses different algorithm
+                    return null;
+                }
+
+                return principal;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
     }
 }

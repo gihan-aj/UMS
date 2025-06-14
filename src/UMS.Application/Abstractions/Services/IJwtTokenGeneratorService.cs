@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Security.Claims;
 using UMS.Domain.Users;
 
 namespace UMS.Application.Abstractions.Services
@@ -14,5 +15,7 @@ namespace UMS.Application.Abstractions.Services
         /// <param name="user">The user for whom to generate the token.</param>
         /// <returns>The generated JWT token string and its expiry time.</returns>
         (string Token, DateTime ExpiresAtUtc) GenerateToken(User user);
+
+        ClaimsPrincipal? GetPrincipalFromExpiredToken(string token);
     }
 }

@@ -7,6 +7,7 @@ using System;
 using System.Threading;
 using UMS.Application.Features.Users.Commands.ActivateAccount;
 using UMS.Application.Features.Users.Commands.LoginUser;
+using UMS.Application.Features.Users.Commands.RefreshToken;
 using UMS.Application.Features.Users.Commands.RegisterUser;
 using UMS.Application.Features.Users.Commands.RequestPasswordReset;
 using UMS.Application.Features.Users.Commands.ResendActivationEmail;
@@ -145,6 +146,21 @@ namespace UMS.WebAPI.Endpoints
                 .Produces(StatusCodes.Status200OK)
                 .ProducesProblem(StatusCodes.Status400BadRequest)
                 .ProducesProblem(StatusCodes.Status422UnprocessableEntity) // For invalid/expired token
+                .MapToApiVersion(1, 0);
+
+            // POST /api/v1/users/refresh-token
+            userGroup.MapPost("/refresh-token", async (
+                RefreshTokenCommand command,
+                ISender mediator,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await mediator.Send(command, cancellationToken);
+                return result.ToHttpResult(onSuccess: Results.Ok);
+            })
+                .WithName("RefreshToken")
+                .Produces<LoginUserResponse>(StatusCodes.Status200OK)
+                .ProducesProblem(StatusCodes.Status400BadRequest)
+                .ProducesProblem(StatusCodes.Status401Unauthorized) // For invalid/revoked tokens
                 .MapToApiVersion(1, 0);
 
             // ---- Protected Endpoints ----
