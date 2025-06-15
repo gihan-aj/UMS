@@ -18,6 +18,7 @@ namespace UMS.Application.Features.Users.Commands.RegisterUser
     public class RegisterUserCommandHandler : ICommandHandler<RegisterUserCommand, Guid>
     {
         private readonly IUserRepository _userRepository;
+        private readonly IRoleRepository _roleRepository;
         private readonly IPasswordHasherService _passwordHasherService;
         private readonly IReferenceCodeGeneratorService _referenceCodeGeneratorService;
         private readonly IEmailService _emailService;
@@ -36,7 +37,8 @@ namespace UMS.Application.Features.Users.Commands.RegisterUser
             IUnitOfWork unitOfWork,
             IEmailService emailService,
             IOptions<TokenSettings> tokenSettings,
-            IOptions<ClientAppSettings> clientAppSettings)
+            IOptions<ClientAppSettings> clientAppSettings,
+            IRoleRepository roleRepository)
         {
             _passwordHasherService = passwordHasherService ?? throw new ArgumentNullException(nameof(userRepository)); ;
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(passwordHasherService));
@@ -47,6 +49,7 @@ namespace UMS.Application.Features.Users.Commands.RegisterUser
             _emailService = emailService;
             _tokenSettings = tokenSettings.Value;
             _clientAppSettings = clientAppSettings.Value;
+            _roleRepository = roleRepository;
         }
 
         public async Task<Result<Guid>> Handle(RegisterUserCommand command, CancellationToken cancellationToken)
@@ -66,6 +69,14 @@ namespace UMS.Application.Features.Users.Commands.RegisterUser
 
             Guid? currentUserIdForAudit = null;
 
+            // --- Assign default Role ---
+            var defaultRole = await _roleRepository.GetByNameAsync("User");
+            if (defaultRole is null)
+            {
+                _logger.LogError("Default 'User' role not found in the database. Seeding may have failed.");
+                return Result.Failure<Guid>(new Error("Role.NotFound", "Default role configuration is missing.", ErrorType.Failure));
+            }
+
             User newUser;
             try
             {
@@ -79,6 +90,8 @@ namespace UMS.Application.Features.Users.Commands.RegisterUser
                 );
                 _logger.LogInformation("User entity created for email: {Email} with ID: {UserId}, UserCode: {UserCode}, ActivationToken: {ActivationToken}",
                     newUser.Email, newUser.Id, newUser.UserCode, newUser.ActivationToken);
+
+                newUser.AssignRole(defaultRole.Id, Guid.Empty); // Assign role; Guid.Empty for system-assigned
 
                 newUser.GenerateActivationToken(_tokenSettings.ActivationTokenExpiryHours);
             }

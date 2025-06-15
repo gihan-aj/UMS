@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 using UMS.Domain.Primitives;
 using UMS.Domain.Users.Events;
@@ -36,6 +37,9 @@ namespace UMS.Domain.Users
         public string? PasswordResetToken { get; private set; }
 
         public DateTime? PasswordResetTokenExpiryUtc { get; private set; }
+
+        // Navigation properties
+        public ICollection<UserRole> UserRoles { get; private set; } = new HashSet<UserRole>();
 
         public IReadOnlyCollection<RefreshToken> RefreshTokens => _refreshTokens.AsReadOnly();
 
@@ -269,6 +273,18 @@ namespace UMS.Domain.Users
                 .TrimEnd('=') // Padding safe
                 .Replace('+', '-') // URL-safe
                 .Replace('/', '_'); // URL-safe
+        }
+
+        public void AssignRole(byte roleId, Guid assigningUserId)
+        {
+            // Prevent duplicate role assignments
+            if(!UserRoles.Any(ur => ur.RoleId == roleId))
+            {
+                UserRoles.Add(new UserRole { RoleId = roleId, UserId = this.Id });
+                SetModificationAudit(assigningUserId);
+                // Optionally raise a doman event
+                RaiseDomainEvent(new UserRoleAssignedDomainEvent(this.Id, roleId));
+            }
         }
     }
 }

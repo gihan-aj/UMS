@@ -3,19 +3,22 @@ using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using UMS.Application.Abstractions.Services;
 using UMS.Domain.Users;
 using UMS.Infrastructure.Authentication.Settings;
+using UMS.Infrastructure.Persistence;
 
 namespace UMS.Infrastructure.Services
 {
     public class JwtTokenGeneratorService : IJwtTokenGeneratorService
     {
         private readonly JwtSettings _jwtSettings;
+        private readonly ApplicationDbContext _dbContext;
 
-        public JwtTokenGeneratorService(IOptions<JwtSettings> jwtOptions)
+        public JwtTokenGeneratorService(IOptions<JwtSettings> jwtOptions, ApplicationDbContext dbContext)
         {
             _jwtSettings = jwtOptions.Value ?? throw new ArgumentNullException(nameof(jwtOptions), "JWT settings cannot be null.");
 
@@ -27,12 +30,28 @@ namespace UMS.Infrastructure.Services
                 throw new ArgumentNullException(nameof(_jwtSettings.Audience), "JWT Audience cannot be null or empty.");
             if (_jwtSettings.ExpiryMinutes <= 0)
                 throw new ArgumentOutOfRangeException(nameof(_jwtSettings.ExpiryMinutes), "JWT ExpiryMinutes must be greater than zero.");
+            _dbContext = dbContext;
         }
 
         public (string Token, DateTime ExpiresAtUtc) GenerateToken(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_jwtSettings.Secret);
+
+            // --- Fetch Roles and Permissions
+            // This is a simplified query. For performance, this could be optimized
+            // or cached. It runs inside the login transaction.
+            var userRoles = _dbContext.UserRoles
+                .Where(ur => ur.UserId == user.Id)
+                .Join(_dbContext.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => r.Name)
+                .ToList();
+
+            var userPermissions = _dbContext.UserRoles
+                .Where(ur => ur.UserId == user.Id)
+                .Join(_dbContext.RolePermissions, ur => ur.RoleId, rp => rp.RoleId, (ur, rp) => rp.PermissionId)
+                .Join(_dbContext.Permissions, pid => pid, p => p.Id, (pid, p) => p.Name)
+                .Distinct()
+                .ToList();
 
             var claims = new List<Claim>
             {
@@ -45,6 +64,18 @@ namespace UMS.Infrastructure.Services
                 // new Claim(ClaimTypes.Role, "Admin"),
                 // new Claim(ClaimTypes.Role, "User"),
             };
+
+            // Add role claims
+            foreach (var roleName in userRoles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, roleName));
+            }
+
+            // Add permission claims (custom claim type)
+            foreach(var permission in userPermissions)
+            {
+                claims.Add(new Claim("permission", permission));
+            }
 
             if (!string.IsNullOrWhiteSpace(user.FirstName))
             {

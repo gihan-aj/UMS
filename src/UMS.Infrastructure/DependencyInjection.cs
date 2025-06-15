@@ -1,7 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using System;
+using System.Threading.Tasks;
 using UMS.Application.Abstractions.Persistence;
 using UMS.Application.Abstractions.Services;
 using UMS.Application.Settings;
@@ -9,6 +12,7 @@ using UMS.Infrastructure.Authentication.Settings;
 using UMS.Infrastructure.BackgroundJobs;
 using UMS.Infrastructure.Persistence;
 using UMS.Infrastructure.Persistence.Repositories;
+using UMS.Infrastructure.Persistence.Seeders;
 using UMS.Infrastructure.Services;
 using UMS.Infrastructure.Settings;
 
@@ -59,7 +63,7 @@ namespace UMS.Infrastructure
             services.Configure<CleanupSettings>(configuration.GetSection(CleanupSettings.SectionName));
 
             // Register the JWT token generator service
-            services.AddSingleton<IJwtTokenGeneratorService, JwtTokenGeneratorService>();
+            services.AddScoped<IJwtTokenGeneratorService, JwtTokenGeneratorService>();
             // Singleton is fine for JwtTokenGeneratorService as it's stateless and configured via IOptions<JwtSettings>
 
             // --- Email Service ---
@@ -81,12 +85,24 @@ namespace UMS.Infrastructure
             // Replace InMemoryUserRepository with EfCoreUserRepository.
             // Repositories using a Scoped DbContext should also be Scoped.
             services.AddScoped<IUserRepository, EfCoreUserRepository>();
+            services.AddScoped<IRoleRepository, EfCoreRoleRepository>();
 
             // --- Background Job Registration ---
             // Register the cleanup job as a hosted service
             services.AddHostedService<CleanupOldRefreshTokensJob>();
 
+            // --- Seeder Registration ---
+            services.AddScoped<DatabaseSeeder>();
+
             return services;
+        }
+
+        // Extension method to run the seeder
+        public static async Task UseInfrastructureServicesAsync(this IApplicationBuilder app)
+        {
+            using var scope = app.ApplicationServices.CreateScope();
+            var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
+            await seeder.SeedAsync();
         }
     }
 }

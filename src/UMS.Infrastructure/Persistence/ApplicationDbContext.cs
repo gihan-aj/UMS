@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore.Metadata;
 using System.Linq;
 using System.Reflection;
+using UMS.Domain.Authorization;
 using UMS.Domain.Users;
 using UMS.Infrastructure.Persistence.Entities;
 
@@ -14,12 +15,23 @@ namespace UMS.Infrastructure.Persistence
         {
         }
 
-        // DbSet for each Aggregate Root
+        // Domain Aggregate Roots
         public DbSet<User> Users { get; set; } = null!; // null-forgiving operator, EF will initialize it
 
+        public DbSet<Role> Roles { get; set; } = null!;
+
+        // Other Entities
+        public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
+
+        public DbSet<Permission> Permissions { get; set; } = null!;
+
+        // Infrastructure Entities
         public DbSet<EntitySequence> EntitySequences { get; set; } = null!;
 
-        public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
+        // Join Tables (optional to expose as DbSet, but can be useful for direct queries)
+        public DbSet<UserRole> UserRoles { get; set; } = null!;
+
+        public DbSet<RolePermission> RolePermissions { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
