@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using UMS.Application.Features.Users.Commands.ActivateAccount;
 using UMS.Application.Features.Users.Commands.LoginUser;
@@ -13,6 +14,8 @@ using UMS.Application.Features.Users.Commands.RequestPasswordReset;
 using UMS.Application.Features.Users.Commands.ResendActivationEmail;
 using UMS.Application.Features.Users.Commands.ResetPassword;
 using UMS.Application.Features.Users.Queries.GetMyProfile;
+using UMS.Application.Features.Users.Queries.ListUsers;
+using UMS.Domain.Authorization;
 using UMS.WebAPI.Common;
 
 namespace UMS.WebAPI.Endpoints
@@ -179,6 +182,21 @@ namespace UMS.WebAPI.Endpoints
                 .Produces<UserProfileResponse>(StatusCodes.Status200OK)
                 .ProducesProblem(StatusCodes.Status401Unauthorized) // If not authenticated
                 .ProducesProblem(StatusCodes.Status404NotFound)   // If user from token not found in DB
+                .MapToApiVersion(1, 0);
+
+            // GET /api/v1/users
+            userGroup.MapGet("/", async (
+                ISender mediator,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await mediator.Send(new ListUsersQuery(), cancellationToken);
+                return result.ToHttpResult();
+            })
+                .RequireAuthorization(Permissions.Users.Read)
+                .WithName("ListUsers")
+                .Produces<List<UserProfileResponse>>(StatusCodes.Status200OK)
+                .ProducesProblem(StatusCodes.Status401Unauthorized) // Not authenticated
+                .ProducesProblem(StatusCodes.Status403Forbidden)   // Authenticated but lacks permission
                 .MapToApiVersion(1, 0);
 
             // GET /api/v1/users/{id}

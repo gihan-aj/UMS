@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,6 +10,7 @@ using UMS.Application.Abstractions.Persistence;
 using UMS.Application.Abstractions.Services;
 using UMS.Application.Settings;
 using UMS.Infrastructure.Authentication.Settings;
+using UMS.Infrastructure.Authorization;
 using UMS.Infrastructure.BackgroundJobs;
 using UMS.Infrastructure.Persistence;
 using UMS.Infrastructure.Persistence.Repositories;
@@ -65,6 +67,10 @@ namespace UMS.Infrastructure
             // Register the JWT token generator service
             services.AddScoped<IJwtTokenGeneratorService, JwtTokenGeneratorService>();
             // Singleton is fine for JwtTokenGeneratorService as it's stateless and configured via IOptions<JwtSettings>
+
+            // --- Authorization Services ---
+            services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
+            services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
 
             // --- Email Service ---
             // Register the dummy console email service.

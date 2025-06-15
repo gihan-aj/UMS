@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using UMS.Application.Features.Users.Queries.GetMyProfile;
 using UMS.Domain.Users;
 
 namespace UMS.Application.Abstractions.Persistence
@@ -16,5 +18,7 @@ namespace UMS.Application.Abstractions.Persistence
         Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
 
         Task AddRefreshTokenAsync(RefreshToken refreshToken, CancellationToken cancellationToken);
+
+        Task<List<UserProfileResponse>> GetAllUsersAsync(CancellationToken cancellationToken);
     }
 }
