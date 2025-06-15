@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using UMS.Application.Abstractions.Persistence;
-using UMS.Application.Features.Users.Queries.GetMyProfile;
 using UMS.Domain.Users;
 
 namespace UMS.Infrastructure.Persistence.Repositories
@@ -55,7 +54,7 @@ namespace UMS.Infrastructure.Persistence.Repositories
             return Task.FromResult(exists);
         }
 
-        public Task<List<UserProfileResponse>> GetAllUsersAsync(CancellationToken cancellationToken)
+        public Task<List<User>> GetAllUsersAsync(CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }

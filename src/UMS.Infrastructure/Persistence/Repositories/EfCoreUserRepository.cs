@@ -1,11 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using UMS.Application.Abstractions.Persistence;
-using UMS.Application.Features.Users.Queries.GetMyProfile;
 using UMS.Domain.Users;
 
 namespace UMS.Infrastructure.Persistence.Repositories
@@ -84,19 +82,9 @@ namespace UMS.Infrastructure.Persistence.Repositories
             await _dbContext.RefreshTokens.AddAsync(refreshToken, cancellationToken);
         }
 
-        public async Task<List<UserProfileResponse>> GetAllUsersAsync(CancellationToken cancellationToken)
+        public async Task<List<User>> GetAllUsersAsync(CancellationToken cancellationToken)
         {
             var users = await _dbContext.Users
-                .Select(u => new UserProfileResponse(
-                    u.Id,
-                    u.UserCode,
-                    u.Email,
-                    u.FirstName,
-                    u.LastName,
-                    u.IsActive,
-                    u.CreatedAtUtc,
-                    u.LastLoginAtUtc
-                    ))
                 .ToListAsync(cancellationToken);
 
             return users;

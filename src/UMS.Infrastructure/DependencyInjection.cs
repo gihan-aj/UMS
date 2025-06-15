@@ -63,6 +63,7 @@ namespace UMS.Infrastructure
             services.Configure<TokenSettings>(configuration.GetSection(TokenSettings.SectionName));
             services.Configure<ClientAppSettings>(configuration.GetSection(ClientAppSettings.SectionName));
             services.Configure<CleanupSettings>(configuration.GetSection(CleanupSettings.SectionName));
+            services.Configure<AdminSettings>(configuration.GetSection(AdminSettings.SectionName));
 
             // Register the JWT token generator service
             services.AddScoped<IJwtTokenGeneratorService, JwtTokenGeneratorService>();

@@ -1,9 +1,15 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using UMS.Application.Abstractions.Services;
 using UMS.Domain.Authorization;
+using UMS.Domain.Users;
+using UMS.Infrastructure.Services;
+using UMS.Infrastructure.Settings;
 
 namespace UMS.Infrastructure.Persistence.Seeders
 {
@@ -11,11 +17,22 @@ namespace UMS.Infrastructure.Persistence.Seeders
     {
         private readonly ApplicationDbContext _dbContext;
         private readonly ILogger<DatabaseSeeder> _logger;
+        IPasswordHasherService _passwordHasher;
+        IReferenceCodeGeneratorService _codeGenerator;
+        AdminSettings _adminSettings; // Inject admin settings
 
-        public DatabaseSeeder(ApplicationDbContext dbContext, ILogger<DatabaseSeeder> logger)
+        public DatabaseSeeder(
+            ApplicationDbContext dbContext,
+            ILogger<DatabaseSeeder> logger,
+            IPasswordHasherService passwordHasher,
+            IReferenceCodeGeneratorService codeGenerator,
+            IOptions<AdminSettings> adminSettings)
         {
             _dbContext = dbContext;
             _logger = logger;
+            _passwordHasher = passwordHasher;
+            _codeGenerator = codeGenerator;
+            _adminSettings = adminSettings.Value;
         }
 
         public async Task SeedAsync(CancellationToken cancellationToken = default)
@@ -24,6 +41,45 @@ namespace UMS.Infrastructure.Persistence.Seeders
 
             await SeedPermissionsAsync(cancellationToken);
             await SeedRolesAsync(cancellationToken);
+            await SeedSuperAdminAsync(cancellationToken);
+        }
+
+        private async Task SeedSuperAdminAsync(CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(_adminSettings.Email) || string.IsNullOrEmpty(_adminSettings.Password))
+            {
+                _logger.LogWarning("Admin user credentials are not configured. Skipping SuperAdmin seeding.");
+                return;
+            }
+
+            if (!await _dbContext.Users.AnyAsync(u => u.Email == _adminSettings.Email, cancellationToken))
+            {
+                _logger.LogInformation("Seeding 'SuperAdmin' user account...");
+
+                var superAdminRole = await _dbContext.Roles.FirstOrDefaultAsync(r => r.Name == "SuperAdmin", cancellationToken);
+                if (superAdminRole == null)
+                {
+                    _logger.LogError("'SuperAdmin' role not found. Cannot seed SuperAdmin user.");
+                    return;
+                }
+
+                string userCode = await _codeGenerator.GenerateReferenceCodeAsync("USR");
+                string passwordHash = _passwordHasher.HashPassword(_adminSettings.Password);
+
+                var adminUser = User.Create(
+                    userCode,
+                    _adminSettings.Email,
+                    passwordHash,
+                    _adminSettings.FirstName,
+                    _adminSettings.LastName,
+                    Guid.Empty); // System created
+
+                adminUser.AssignRole(superAdminRole.Id, Guid.Empty);
+                adminUser.Activate(Guid.Empty); // Activate the admin account immediately
+
+                await _dbContext.Users.AddAsync(adminUser, cancellationToken);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }
         }
 
         private async Task SeedPermissionsAsync(CancellationToken cancellationToken = default)
