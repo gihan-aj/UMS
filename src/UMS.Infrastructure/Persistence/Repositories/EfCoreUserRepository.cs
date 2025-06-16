@@ -1,10 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using UMS.Application.Abstractions.Persistence;
 using UMS.Domain.Users;
+using UMS.SharedKernel;
 
 namespace UMS.Infrastructure.Persistence.Repositories
 {
@@ -88,6 +90,28 @@ namespace UMS.Infrastructure.Persistence.Repositories
                 .ToListAsync(cancellationToken);
 
             return users;
+        }
+
+        public async Task<PagedList<User>> GetPagedListAsync(
+            int page,
+            int pageSize,
+            string? searchTerm,
+            CancellationToken cancellationToken)
+        {
+            IQueryable<User> query = _dbContext.Users;
+
+            // Apply search filter if a search term is provided
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(u =>
+                    u.Email.Contains(searchTerm) ||
+                    (u.FirstName != null && u.FirstName.Contains(searchTerm)) ||
+                    (u.LastName != null && u.LastName.Contains(searchTerm)) ||
+                    u.UserCode.Contains(searchTerm)
+                );
+            }
+
+            return await PagedList<User>.CreateAsync(query, page, pageSize, cancellationToken);
         }
     }
 }

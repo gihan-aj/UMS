@@ -16,6 +16,7 @@ using UMS.Application.Features.Users.Commands.ResetPassword;
 using UMS.Application.Features.Users.Queries.GetMyProfile;
 using UMS.Application.Features.Users.Queries.ListUsers;
 using UMS.Domain.Authorization;
+using UMS.SharedKernel;
 using UMS.WebAPI.Common;
 
 namespace UMS.WebAPI.Endpoints
@@ -185,16 +186,20 @@ namespace UMS.WebAPI.Endpoints
                 .MapToApiVersion(1, 0);
 
             // GET /api/v1/users
-            userGroup.MapGet("/", async (
+            userGroup.MapGet("/", async (  
                 ISender mediator,
-                CancellationToken cancellationToken) =>
+                CancellationToken cancellationToken,
+                [FromQuery] int page = 1,
+                [FromQuery] int pageSize = 10,
+                [FromQuery] string? searchTerm = null) =>
             {
-                var result = await mediator.Send(new ListUsersQuery(), cancellationToken);
+                var query = new ListUsersQuery(page, pageSize, searchTerm);
+                var result = await mediator.Send(query, cancellationToken);
                 return result.ToHttpResult();
             })
                 .RequireAuthorization(Permissions.Users.Read)
                 .WithName("ListUsers")
-                .Produces<List<UserProfileResponse>>(StatusCodes.Status200OK)
+                .Produces<PagedList<UserProfileResponse>>(StatusCodes.Status200OK)
                 .ProducesProblem(StatusCodes.Status401Unauthorized) // Not authenticated
                 .ProducesProblem(StatusCodes.Status403Forbidden)   // Authenticated but lacks permission
                 .MapToApiVersion(1, 0);

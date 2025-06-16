@@ -9,7 +9,7 @@ using UMS.SharedKernel;
 
 namespace UMS.Application.Features.Users.Queries.ListUsers
 {
-    public class ListUsersQueryHandler : IQueryHandler<ListUsersQuery, List<UserProfileResponse>>
+    public class ListUsersQueryHandler : IQueryHandler<ListUsersQuery, PagedList<UserProfileResponse>>
     {
         private readonly IUserRepository _userRepository;
 
@@ -18,10 +18,16 @@ namespace UMS.Application.Features.Users.Queries.ListUsers
             _userRepository = userRepository;
         }
 
-        public async Task<Result<List<UserProfileResponse>>> Handle(ListUsersQuery request, CancellationToken cancellationToken)
+        public async Task<Result<PagedList<UserProfileResponse>>> Handle(ListUsersQuery request, CancellationToken cancellationToken)
         {
-            var users = await _userRepository.GetAllUsersAsync(cancellationToken);
-            var response = users
+            var pagedUserList = await _userRepository.GetPagedListAsync(
+                request.Page, 
+                request.PageSize, 
+                request.SerchTerm, 
+                cancellationToken);
+
+            // Mapping from the paginated domain entity (User) to the paginated DTO (UserProfileResponse)
+            var userProfileResponses = pagedUserList.Items
                 .Select(u => new UserProfileResponse(
                     u.Id,
                     u.UserCode,
@@ -31,10 +37,17 @@ namespace UMS.Application.Features.Users.Queries.ListUsers
                     u.IsActive,
                     u.CreatedAtUtc,
                     u.LastLoginAtUtc
-                ))
-                .ToList();
+                )).ToList();
 
-            return response;
+            // Create a new PagedList of the response type
+            var pagedResponse = new PagedList<UserProfileResponse>(
+                userProfileResponses,
+                pagedUserList.Page,
+                pagedUserList.PageSize,
+                pagedUserList.TotalCount
+            );
+
+            return pagedResponse;
         }
     }
 }

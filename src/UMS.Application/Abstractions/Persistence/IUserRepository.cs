@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using UMS.Domain.Users;
+using UMS.SharedKernel;
 
 namespace UMS.Application.Abstractions.Persistence
 {
@@ -19,5 +20,11 @@ namespace UMS.Application.Abstractions.Persistence
         Task AddRefreshTokenAsync(RefreshToken refreshToken, CancellationToken cancellationToken);
 
         Task<List<User>> GetAllUsersAsync(CancellationToken cancellationToken);
+
+        Task<PagedList<User>> GetPagedListAsync(
+            int page,
+            int pageSize,
+            string? searchTerm,
+            CancellationToken cancellationToken);
     }
 }
