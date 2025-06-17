@@ -163,6 +163,7 @@ app.UseAuthorization();
 
 // --- Map Organized Minimal API Endpoints ---
 app.MapUserApiEndpoints();
+app.MapRoleApiEndpoints();
 
 // --- Run Database Seeder ---
 // This will run the seeder every time the application starts.

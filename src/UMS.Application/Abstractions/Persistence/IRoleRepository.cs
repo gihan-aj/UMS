@@ -1,5 +1,7 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 using UMS.Domain.Authorization;
+using UMS.SharedKernel;
 
 namespace UMS.Application.Abstractions.Persistence
 {
@@ -14,5 +16,11 @@ namespace UMS.Application.Abstractions.Persistence
         /// <param name="name">The name of the role to search for.</param>
         /// <returns>The Role if found; otherwise, null.</returns>
         Task<Role?> GetByNameAsync(string name);
+
+        Task<PagedList<Role>> GetPagedListAsync(
+            int page,
+            int pageSize,
+            string? searchTerm,
+            CancellationToken cancellationToken);
     }
 }
