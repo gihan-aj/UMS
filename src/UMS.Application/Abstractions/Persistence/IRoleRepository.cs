@@ -15,12 +15,16 @@ namespace UMS.Application.Abstractions.Persistence
         /// </summary>
         /// <param name="name">The name of the role to search for.</param>
         /// <returns>The Role if found; otherwise, null.</returns>
-        Task<Role?> GetByNameAsync(string name);
+        Task<Role?> GetByNameAsync(string name, CancellationToken cancellationToken = default);
 
         Task<PagedList<Role>> GetPagedListAsync(
             int page,
             int pageSize,
             string? searchTerm,
-            CancellationToken cancellationToken);
+            CancellationToken cancellationToken = default);
+
+        Task AddAsync(Role role, CancellationToken cancellationToken = default);
+
+        Task<byte> GetNextIdAsync();
     }
 }
