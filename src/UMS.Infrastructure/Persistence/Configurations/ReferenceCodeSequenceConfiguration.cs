@@ -4,9 +4,9 @@ using UMS.Infrastructure.Persistence.Entities;
 
 namespace UMS.Infrastructure.Persistence.Configurations
 {
-    public class EntitySequenceConfiguration : IEntityTypeConfiguration<EntitySequence>
+    public class ReferenceCodeSequenceConfiguration : IEntityTypeConfiguration<ReferenceCodeSequence>
     {
-        public void Configure(EntityTypeBuilder<EntitySequence> builder)
+        public void Configure(EntityTypeBuilder<ReferenceCodeSequence> builder)
         {
             // Table name will be "entity_sequences" by convention + snake_case in DbContext.
             // If you want to override: builder.ToTable("your_custom_sequence_table_name");

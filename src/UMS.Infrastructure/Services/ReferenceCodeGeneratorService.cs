@@ -63,14 +63,14 @@ namespace UMS.Infrastructure.Services
                 // For simplicity, let's assume we manage a local transaction here for this specific operation.
                 // However, it's better if the UnitOfWork from the command handler spans this.
                 // For now, we'll rely on SaveChangesAsync atomicity for a single operation.
-                var sequenceRecord = await _dbContext.EntitySequences
+                var sequenceRecord = await _dbContext.ReferenceCodeSequences
                     .FirstOrDefaultAsync(s => s.EntityTypePrefix == prefixUpper && s.SequenceDate == currentDate);
 
                 if (sequenceRecord == null)
                 {
                     // First code for this prefix on this day
                     nextSequenceValue = 1;
-                    _dbContext.EntitySequences.Add(new EntitySequence
+                    _dbContext.ReferenceCodeSequences.Add(new ReferenceCodeSequence
                     {
                         EntityTypePrefix = prefixUpper,
                         SequenceDate = currentDate,
@@ -82,7 +82,7 @@ namespace UMS.Infrastructure.Services
                     // Increment existing sequence
                     sequenceRecord.LastValue++;
                     nextSequenceValue = sequenceRecord.LastValue;
-                    _dbContext.EntitySequences.Update(sequenceRecord);
+                    _dbContext.ReferenceCodeSequences.Update(sequenceRecord);
                 }
 
                 // SaveChangesAsync will attempt to commit the transaction.

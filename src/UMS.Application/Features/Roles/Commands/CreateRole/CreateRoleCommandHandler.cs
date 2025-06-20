@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using System.Threading;
 using System.Threading.Tasks;
 using UMS.Application.Abstractions.Persistence;
+using UMS.Application.Abstractions.Services;
 using UMS.Application.Common.Messaging.Commands;
 using UMS.Domain.Authorization;
 using UMS.SharedKernel;
@@ -12,17 +13,20 @@ namespace UMS.Application.Features.Roles.Commands.CreateRole
     public class CreateRoleCommandHandler : ICommandHandler<CreateRoleCommand, byte>
     {
         private readonly IRoleRepository _roleRepository;
+        private readonly ISequenceGeneratorService _sequenceGeneratorService;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<CreateRoleCommandHandler> _logger;
 
         public CreateRoleCommandHandler(
-            IRoleRepository roleRepository, 
-            IUnitOfWork unitOfWork, 
-            ILogger<CreateRoleCommandHandler> logger)
+            IRoleRepository roleRepository,
+            IUnitOfWork unitOfWork,
+            ILogger<CreateRoleCommandHandler> logger,
+            ISequenceGeneratorService sequenceGeneratorService)
         {
             _roleRepository = roleRepository;
             _unitOfWork = unitOfWork;
             _logger = logger;
+            _sequenceGeneratorService = sequenceGeneratorService;
         }
 
         public async Task<Result<byte>> Handle(CreateRoleCommand command, CancellationToken cancellationToken)
@@ -39,9 +43,7 @@ namespace UMS.Application.Features.Roles.Commands.CreateRole
             }
 
             // 2. Create the new role entity
-            // We need a way to generate a new, unique ID. For now, let's assume we can query the max existing ID.
-            // A more robust solution might involve a dedicated sequence generator for role IDs.
-            var newRoleId = await _roleRepository.GetNextIdAsync();
+            var newRoleId = await _sequenceGeneratorService.GetNextIdAsync<byte>("Roles", cancellationToken);
             var newRole = Role.Create(newRoleId, command.Name);
 
             // 3. Add the role to the repository

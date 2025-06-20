@@ -15,20 +15,22 @@ namespace UMS.Infrastructure.Persistence
         {
         }
 
-        // Domain Aggregate Roots
+        // --- Domain Aggregate Roots ---
         public DbSet<User> Users { get; set; } = null!; // null-forgiving operator, EF will initialize it
 
         public DbSet<Role> Roles { get; set; } = null!;
 
-        // Other Entities
+        // --- Other Domain Entities ---
         public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
 
         public DbSet<Permission> Permissions { get; set; } = null!;
 
-        // Infrastructure Entities
-        public DbSet<EntitySequence> EntitySequences { get; set; } = null!;
+        // --- Infrastructure & Sequence Entities ---
+        public DbSet<ReferenceCodeSequence> ReferenceCodeSequences { get; set; } = null!;
 
-        // Join Tables (optional to expose as DbSet, but can be useful for direct queries)
+        public DbSet<NumericSequence> NumericSequences { get; set; } = null!;
+
+        // --- Join Tables ---
         public DbSet<UserRole> UserRoles { get; set; } = null!;
 
         public DbSet<RolePermission> RolePermissions { get; set; } = null!;

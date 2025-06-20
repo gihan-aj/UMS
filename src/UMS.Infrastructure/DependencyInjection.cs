@@ -87,6 +87,7 @@ namespace UMS.Infrastructure
             // This in-memory version can be a singleton for now as it uses a static ConcurrentDictionary.
             // A database-backed one would likely be Scoped or Transient depending on DbContext lifetime.
             services.AddScoped<IReferenceCodeGeneratorService, ReferenceCodeGeneratorService>();
+            services.AddScoped<ISequenceGeneratorService, SequenceGeneratorService>();
 
             // --- Repository Implementations ---
             // Replace InMemoryUserRepository with EfCoreUserRepository.

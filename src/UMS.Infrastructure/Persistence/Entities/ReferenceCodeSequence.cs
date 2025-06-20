@@ -6,7 +6,7 @@ namespace UMS.Infrastructure.Persistence.Entities
     /// Represents a sequence counter for generating human-readable entity codes.
     /// Configuration is handled via IEntityTypeConfiguration.
     /// </summary>
-    public class EntitySequence
+    public class ReferenceCodeSequence
     {
         /// <summary>
         /// The prefix for the entity type (e.g., "USR", "ORD").
