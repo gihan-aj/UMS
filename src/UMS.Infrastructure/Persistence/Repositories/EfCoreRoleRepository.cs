@@ -42,6 +42,15 @@ namespace UMS.Infrastructure.Persistence.Repositories
             await _dbContext.Roles.AddAsync(role, cancellationToken);
         }
 
+        public async Task<Role?> GetByIdWithPermissionsAsync(byte id, CancellationToken cancellationToken = default)
+        {
+            // Eagerly load the RolePermissions join entity, and then the associated Permission entity
+            return await _dbContext.Roles
+                .Include(r => r.Permissions)
+                    .ThenInclude(rp => rp.Permission)
+                .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
+        }
+
         public async Task<byte> GetNextIdAsync()
         {
             // A simple approach to get the next ID. This is NOT concurrency-safe without transaction isolation.

@@ -10,6 +10,12 @@ namespace UMS.Infrastructure.Persistence.Configurations
         {
             // Composite primary key
             builder.HasKey(rp => new { rp.RoleId, rp.PermissionId });
+
+            // Define the relationship to Permission to enable .ThenInclude
+            builder.HasOne(rp => rp.Permission)
+                .WithMany()
+                .HasForeignKey(rp => rp.PermissionId)
+                .IsRequired();
         }
     }
 }

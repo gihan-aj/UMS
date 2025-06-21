@@ -8,5 +8,7 @@
         public byte RoleId { get; set; }
 
         public short PermissionId { get; set; }
+
+        public virtual Permission Permission { get; set; } = null!;
     }
 }

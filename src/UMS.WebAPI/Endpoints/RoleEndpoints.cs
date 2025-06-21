@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using System.Threading;
 using UMS.Application.Features.Roles.Commands.CreateRole;
+using UMS.Application.Features.Roles.Queries.GetRoleById;
 using UMS.Application.Features.Roles.Queries.ListQueries;
 using UMS.Domain.Authorization;
 using UMS.SharedKernel;
@@ -68,9 +69,22 @@ namespace UMS.WebAPI.Endpoints
                 .ProducesProblem(StatusCodes.Status409Conflict)
                 .MapToApiVersion(1, 0);
 
-            // Placeholder for GetRoleById needed for CreatedAtRoute
-            roleGroup.MapGet("/{id}", (byte id) => Results.Ok(new { Id = id, Name = "Placeholder Role" }))
+            // GET /api/v1/roles/{id}
+            roleGroup.MapGet("/{id}", async (
+                byte id,
+                ISender mediator,
+                CancellationToken cancellationToken) =>
+            {
+                var request = new GetRoleByIdQuery(id);
+                var result = await mediator.Send(request, cancellationToken);
+                return result.ToHttpResult();
+            })
+                .RequireAuthorization(Permissions.Roles.Read)
                 .WithName("GetRoleById")
+                .Produces<RoleWithPermissionsResponse>(StatusCodes.Status200OK)
+                .ProducesProblem(StatusCodes.Status401Unauthorized)
+                .ProducesProblem(StatusCodes.Status403Forbidden)
+                .ProducesProblem(StatusCodes.Status404NotFound)
                 .MapToApiVersion(1, 0);
 
             return app;

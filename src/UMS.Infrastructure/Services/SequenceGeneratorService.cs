@@ -48,7 +48,7 @@ namespace UMS.Infrastructure.Services
                     _dbContext.NumericSequences.Update(sequence);
                 }
 
-                await _dbContext.SaveChangesAsync(cancellationToken);
+                //await _dbContext.SaveChangesAsync(cancellationToken);
             });
 
             if(nextValue == 0)

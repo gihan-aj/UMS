@@ -36,7 +36,12 @@ namespace UMS.Infrastructure.Persistence.Configurations
 
             // Ignore the Permission collection for direct mapping; it's linked via the join entity.
             // EF Core will handle this relationship through the RolePermission configuration.
-            builder.Ignore(r => r.Permissions);
+            // builder.Ignore(r => r.Permissions);
+
+            builder.HasMany(r => r.Permissions)
+                .WithOne()
+                .HasForeignKey(rp => rp.RoleId)
+                .IsRequired();
         }
     }
 }

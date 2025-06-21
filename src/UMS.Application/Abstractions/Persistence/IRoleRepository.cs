@@ -26,5 +26,7 @@ namespace UMS.Application.Abstractions.Persistence
         Task AddAsync(Role role, CancellationToken cancellationToken = default);
 
         Task<byte> GetNextIdAsync();
+
+        Task<Role?> GetByIdWithPermissionsAsync(byte id, CancellationToken cancellationToken = default);
     }
 }

@@ -19,6 +19,7 @@ namespace UMS.Infrastructure.Persistence.Seeders
         private readonly ILogger<DatabaseSeeder> _logger;
         IPasswordHasherService _passwordHasher;
         IReferenceCodeGeneratorService _codeGenerator;
+        ISequenceGeneratorService _sequenceGenerator;
         AdminSettings _adminSettings; // Inject admin settings
 
         public DatabaseSeeder(
@@ -26,13 +27,15 @@ namespace UMS.Infrastructure.Persistence.Seeders
             ILogger<DatabaseSeeder> logger,
             IPasswordHasherService passwordHasher,
             IReferenceCodeGeneratorService codeGenerator,
-            IOptions<AdminSettings> adminSettings)
+            IOptions<AdminSettings> adminSettings,
+            ISequenceGeneratorService sequenceGenerator)
         {
             _dbContext = dbContext;
             _logger = logger;
             _passwordHasher = passwordHasher;
             _codeGenerator = codeGenerator;
             _adminSettings = adminSettings.Value;
+            _sequenceGenerator = sequenceGenerator;
         }
 
         public async Task SeedAsync(CancellationToken cancellationToken = default)
@@ -118,7 +121,6 @@ namespace UMS.Infrastructure.Persistence.Seeders
         private async Task SeedRolesAsync(CancellationToken cancellationToken = default)
         {
             // --- SuperAdmin Role ---
-            const byte superAdminRoleId = 1;
             const string superAdminRoleName = "SuperAdmin";
 
             if(!await _dbContext.Roles.AnyAsync(r => r.Name == superAdminRoleName, cancellationToken))
@@ -126,6 +128,7 @@ namespace UMS.Infrastructure.Persistence.Seeders
                 _logger.LogInformation("Seeding '{RoleName}' role...", superAdminRoleName);
                 var allPermissions = await _dbContext.Permissions.ToListAsync(cancellationToken);
 
+                byte superAdminRoleId = await _sequenceGenerator.GetNextIdAsync<byte>("Roles", cancellationToken);
                 var superAdminRole = Role.Create(superAdminRoleId, superAdminRoleName);
 
                 foreach(var permission in allPermissions)
@@ -138,7 +141,6 @@ namespace UMS.Infrastructure.Persistence.Seeders
             }
 
             // --- User Role ---
-            const byte userRoleId = 2;
             const string userRoleName = "User";
 
             if (!await _dbContext.Roles.AnyAsync(r => r.Name == userRoleName, cancellationToken))
@@ -151,6 +153,7 @@ namespace UMS.Infrastructure.Persistence.Seeders
                     .Where(p => p.Name == Permissions.Users.Read)
                     .ToListAsync(cancellationToken);
 
+                byte userRoleId = await _sequenceGenerator.GetNextIdAsync<byte>("Roles", cancellationToken);
                 var userRole = Role.Create(userRoleId, userRoleName);
 
                 foreach(var permission in userPermissions)
