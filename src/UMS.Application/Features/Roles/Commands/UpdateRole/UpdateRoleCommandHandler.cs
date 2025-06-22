@@ -52,9 +52,13 @@ namespace UMS.Application.Features.Roles.Commands.UpdateRole
                 }
             }
 
-            Guid? currentUserId = _currentUserService.UserId;
+            if (role.Name is "SuperAdmin" or "User")
+            {
+                _logger.LogWarning("Attempt to update system role '{RoleName}' by user {UserId}.", role.Name, _currentUserService.UserId);
+                return Result.Failure(new Error("Role.CannotUpdateSystemRole", $"System role '{role.Name}' cannot be updated.", ErrorType.Conflict));
+            }
 
-            role.UpdateName(command.NewName, currentUserId);
+            role.UpdateName(command.NewName, _currentUserService.UserId);
             _logger.LogInformation("Updating role {RoleId} name to '{NewName}'.", command.RoleId, command.NewName);
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);

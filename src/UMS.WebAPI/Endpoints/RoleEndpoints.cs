@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using System.Threading;
 using UMS.Application.Features.Roles.Commands.CreateRole;
+using UMS.Application.Features.Roles.Commands.DeleteRole;
 using UMS.Application.Features.Roles.Commands.UpdateRole;
 using UMS.Application.Features.Roles.Queries.GetRoleById;
 using UMS.Application.Features.Roles.Queries.ListQueries;
@@ -107,6 +108,24 @@ namespace UMS.WebAPI.Endpoints
                 .ProducesProblem(StatusCodes.Status401Unauthorized)
                 .ProducesProblem(StatusCodes.Status403Forbidden)
                 .ProducesProblem(StatusCodes.Status404NotFound)
+                .ProducesProblem(StatusCodes.Status409Conflict)
+                .MapToApiVersion(1, 0);
+            
+            // DELETE /api/v1/roles/{id}
+            roleGroup.MapDelete("/{id}", async (
+                byte id,
+                ISender mediator,
+                CancellationToken cancellationToken) =>
+            {
+                var command = new DeleteRoleCommand(id);
+                var result = await mediator.Send(command, cancellationToken);
+                return result.ToHttpResult(onSuccess: () => Results.NoContent());
+            })
+                .RequireAuthorization(Permissions.Roles.Delete)
+                .WithName("DeleteRole")
+                .Produces(StatusCodes.Status204NoContent)
+                .ProducesProblem(StatusCodes.Status401Unauthorized)
+                .ProducesProblem(StatusCodes.Status403Forbidden)
                 .ProducesProblem(StatusCodes.Status409Conflict)
                 .MapToApiVersion(1, 0);
 

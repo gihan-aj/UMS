@@ -74,5 +74,10 @@ namespace UMS.Infrastructure.Persistence.Repositories
                 .FindAsync(id);
         }
 
+        public async Task<bool> IsRoleAssignedToUsersAsync(byte roleId, CancellationToken cancellationToken = default)
+        {
+            return await _dbContext.UserRoles.AnyAsync(ur => ur.RoleId == roleId, cancellationToken);
+        }
+
     }
 }
