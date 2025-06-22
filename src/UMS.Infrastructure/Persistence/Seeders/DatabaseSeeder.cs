@@ -129,7 +129,7 @@ namespace UMS.Infrastructure.Persistence.Seeders
                 var allPermissions = await _dbContext.Permissions.ToListAsync(cancellationToken);
 
                 byte superAdminRoleId = await _sequenceGenerator.GetNextIdAsync<byte>("Roles", cancellationToken);
-                var superAdminRole = Role.Create(superAdminRoleId, superAdminRoleName);
+                var superAdminRole = Role.Create(superAdminRoleId, superAdminRoleName, Guid.Empty);
 
                 foreach(var permission in allPermissions)
                 {
@@ -154,7 +154,7 @@ namespace UMS.Infrastructure.Persistence.Seeders
                     .ToListAsync(cancellationToken);
 
                 byte userRoleId = await _sequenceGenerator.GetNextIdAsync<byte>("Roles", cancellationToken);
-                var userRole = Role.Create(userRoleId, userRoleName);
+                var userRole = Role.Create(userRoleId, userRoleName, Guid.Empty);
 
                 foreach(var permission in userPermissions)
                 {

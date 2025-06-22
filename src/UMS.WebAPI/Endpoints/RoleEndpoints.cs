@@ -5,11 +5,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using System.Threading;
 using UMS.Application.Features.Roles.Commands.CreateRole;
+using UMS.Application.Features.Roles.Commands.UpdateRole;
 using UMS.Application.Features.Roles.Queries.GetRoleById;
 using UMS.Application.Features.Roles.Queries.ListQueries;
 using UMS.Domain.Authorization;
 using UMS.SharedKernel;
 using UMS.WebAPI.Common;
+using UMS.WebAPI.Contracts.Requests.Roles;
 
 namespace UMS.WebAPI.Endpoints
 {
@@ -85,6 +87,27 @@ namespace UMS.WebAPI.Endpoints
                 .ProducesProblem(StatusCodes.Status401Unauthorized)
                 .ProducesProblem(StatusCodes.Status403Forbidden)
                 .ProducesProblem(StatusCodes.Status404NotFound)
+                .MapToApiVersion(1, 0);
+
+            // PUT /api/v1/roles/{id}
+            roleGroup.MapPut("/{id}", async (
+                byte id,
+                UpdateRoleRequest request,
+                ISender mediator,
+                CancellationToken cancellationToken) =>
+            {
+                var command = new UpdateRoleCommand(id, request.Name);
+                var result = await mediator.Send(command, cancellationToken);
+                return result.ToHttpResult(onSuccess: () => Results.NoContent());
+            })
+                .RequireAuthorization(Permissions.Roles.Update)
+                .WithName("UpdateRole")
+                .Produces(StatusCodes.Status204NoContent)
+                .ProducesProblem(StatusCodes.Status400BadRequest)
+                .ProducesProblem(StatusCodes.Status401Unauthorized)
+                .ProducesProblem(StatusCodes.Status403Forbidden)
+                .ProducesProblem(StatusCodes.Status404NotFound)
+                .ProducesProblem(StatusCodes.Status409Conflict)
                 .MapToApiVersion(1, 0);
 
             return app;

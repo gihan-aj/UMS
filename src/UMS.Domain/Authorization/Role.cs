@@ -25,11 +25,24 @@ namespace UMS.Domain.Authorization
 
         private Role() { }
 
-        public static Role Create(byte id, string name)
+        public static Role Create(byte id, string name, Guid? createdByUserId)
         {
-            // Add validation if needed
-            return new Role { Id = id, Name = name };
+            var newRole = new Role { Id = id, Name = name };
+            newRole.SetCreationAudit(createdByUserId);
+
+            return newRole;
         }
+
+        public void UpdateName(string newName, Guid? modifiedByUserId)
+        {
+            if (string.IsNullOrWhiteSpace(newName) || newName.Equals(Name, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+            Name = newName;
+            SetModificationAudit(modifiedByUserId);
+        }
+
 
         // --- Domain Methods ---
         public void MarkAsDeleted(Guid? deletedByUserId) 

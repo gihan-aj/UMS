@@ -13,6 +13,7 @@ namespace UMS.Application.Features.Roles.Commands.CreateRole
     public class CreateRoleCommandHandler : ICommandHandler<CreateRoleCommand, byte>
     {
         private readonly IRoleRepository _roleRepository;
+        private readonly ICurrentUserService _currentUserService;
         private readonly ISequenceGeneratorService _sequenceGeneratorService;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<CreateRoleCommandHandler> _logger;
@@ -21,12 +22,14 @@ namespace UMS.Application.Features.Roles.Commands.CreateRole
             IRoleRepository roleRepository,
             IUnitOfWork unitOfWork,
             ILogger<CreateRoleCommandHandler> logger,
-            ISequenceGeneratorService sequenceGeneratorService)
+            ISequenceGeneratorService sequenceGeneratorService,
+            ICurrentUserService currentUserService)
         {
             _roleRepository = roleRepository;
             _unitOfWork = unitOfWork;
             _logger = logger;
             _sequenceGeneratorService = sequenceGeneratorService;
+            _currentUserService = currentUserService;
         }
 
         public async Task<Result<byte>> Handle(CreateRoleCommand command, CancellationToken cancellationToken)
@@ -44,7 +47,8 @@ namespace UMS.Application.Features.Roles.Commands.CreateRole
 
             // 2. Create the new role entity
             var newRoleId = await _sequenceGeneratorService.GetNextIdAsync<byte>("Roles", cancellationToken);
-            var newRole = Role.Create(newRoleId, command.Name);
+            var createdUserId = _currentUserService.UserId;
+            var newRole = Role.Create(newRoleId, command.Name, createdUserId);
 
             // 3. Add the role to the repository
             await _roleRepository.AddAsync(newRole);

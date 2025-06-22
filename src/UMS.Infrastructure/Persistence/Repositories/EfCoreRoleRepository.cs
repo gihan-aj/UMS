@@ -42,6 +42,11 @@ namespace UMS.Infrastructure.Persistence.Repositories
             await _dbContext.Roles.AddAsync(role, cancellationToken);
         }
 
+        public void Update(Role role)
+        {
+            _dbContext.Roles.Update(role);
+        }
+
         public async Task<Role?> GetByIdWithPermissionsAsync(byte id, CancellationToken cancellationToken = default)
         {
             // Eagerly load the RolePermissions join entity, and then the associated Permission entity
@@ -62,5 +67,12 @@ namespace UMS.Infrastructure.Persistence.Repositories
 
             return (byte)(maxId + 1);
         }
+
+        public async Task<Role?> GetByIdAsync(byte id)
+        {
+            return await _dbContext.Roles
+                .FindAsync(id);
+        }
+
     }
 }
