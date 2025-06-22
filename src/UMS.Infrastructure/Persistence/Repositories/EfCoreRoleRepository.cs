@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -79,5 +80,22 @@ namespace UMS.Infrastructure.Persistence.Repositories
             return await _dbContext.UserRoles.AnyAsync(ur => ur.RoleId == roleId, cancellationToken);
         }
 
+        public void RemoveRolePermissionsRange(List<RolePermission> rolePermissionsToRemove)
+        {
+            _dbContext.RolePermissions.RemoveRange(rolePermissionsToRemove);
+        }
+        
+        public async Task AddRolePermissionsRangeAsync(List<RolePermission> rolePermissionsToRemove, CancellationToken cancellationToken = default)
+        {
+            await _dbContext.RolePermissions.AddRangeAsync(rolePermissionsToRemove, cancellationToken);
+        }
+
+        public async Task<List<short>> GetExistingPermissionsAsync(List<short> permissionIds, CancellationToken cancellationToken = default)
+        {
+            return await _dbContext.Permissions
+                .Where(p => permissionIds.Contains(p.Id))
+                .Select(p => p.Id)
+                .ToListAsync(cancellationToken);
+        }
     }
 }

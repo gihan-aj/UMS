@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using UMS.Domain.Authorization;
 using UMS.SharedKernel;
@@ -34,5 +35,11 @@ namespace UMS.Application.Abstractions.Persistence
         Task<Role?> GetByIdAsync(byte id);
 
         Task<bool> IsRoleAssignedToUsersAsync(byte roleId, CancellationToken cancellationToken = default);
+
+        void RemoveRolePermissionsRange(List<RolePermission> rolePermissionsToRemove);
+
+        Task AddRolePermissionsRangeAsync(List<RolePermission> rolePermissionsToRemove, CancellationToken cancellationToken = default);
+
+        Task<List<short>> GetExistingPermissionsAsync(List<short> permissionIds, CancellationToken cancellationToken = default);
     }
 }

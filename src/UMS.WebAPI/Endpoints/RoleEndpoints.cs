@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using System.Threading;
+using UMS.Application.Features.Roles.Commands.AssignPermissions;
 using UMS.Application.Features.Roles.Commands.CreateRole;
 using UMS.Application.Features.Roles.Commands.DeleteRole;
 using UMS.Application.Features.Roles.Commands.UpdateRole;
@@ -110,7 +111,28 @@ namespace UMS.WebAPI.Endpoints
                 .ProducesProblem(StatusCodes.Status404NotFound)
                 .ProducesProblem(StatusCodes.Status409Conflict)
                 .MapToApiVersion(1, 0);
-            
+
+            // PUT /api/v1/roles/{id}/permissions
+            roleGroup.MapPut("/{id}/permissions", async (
+                byte id,
+                AssignPermissionsRequest request,
+                ISender mediator,
+                CancellationToken cancellationToken) =>
+            {
+                var command = new AssignPermissionsToRoleCommand(id, request.PermissionIds);
+                var result = await mediator.Send(command, cancellationToken);
+                return result.ToHttpResult(onSuccess: () => Results.NoContent());
+            })
+                .RequireAuthorization(Permissions.Roles.AssignPermissions)
+                .WithName("AssignPermissionsToRole")    
+                .Produces(StatusCodes.Status204NoContent)
+                .ProducesProblem(StatusCodes.Status400BadRequest)
+                .ProducesProblem(StatusCodes.Status401Unauthorized)
+                .ProducesProblem(StatusCodes.Status403Forbidden)
+                .ProducesProblem(StatusCodes.Status404NotFound)
+                .ProducesProblem(StatusCodes.Status409Conflict)
+                .MapToApiVersion(1, 0);
+
             // DELETE /api/v1/roles/{id}
             roleGroup.MapDelete("/{id}", async (
                 byte id,
