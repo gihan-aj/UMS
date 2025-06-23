@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using UMS.Application.Features.Users.Commands.ActivateAccount;
+using UMS.Application.Features.Users.Commands.AssignRole;
 using UMS.Application.Features.Users.Commands.LoginUser;
 using UMS.Application.Features.Users.Commands.RefreshToken;
 using UMS.Application.Features.Users.Commands.RegisterUser;
@@ -18,6 +19,7 @@ using UMS.Application.Features.Users.Queries.ListUsers;
 using UMS.Domain.Authorization;
 using UMS.SharedKernel;
 using UMS.WebAPI.Common;
+using UMS.WebAPI.Contracts.Requests.Users;
 
 namespace UMS.WebAPI.Endpoints
 {
@@ -213,6 +215,26 @@ namespace UMS.WebAPI.Endpoints
                 .Produces<object>(StatusCodes.Status200OK)
                 .ProducesProblem(StatusCodes.Status404NotFound)
                 .MapToApiVersion(1, 0); // Explicitly map this endpoint to v1.0;
+
+            // POST /api/v1/users/{userId}/roles
+            userGroup.MapPost("/{userId:guid}/roles", async (
+                Guid userId,
+                AssignRoleRequest request, // A simple request body for the role ID
+                ISender mediator,
+                CancellationToken cancellationToken) =>
+            {
+                var command = new AssignRoleToUserCommand(userId, request.RoleId);
+                var result = await mediator.Send(command, cancellationToken);
+                return result.ToHttpResult(onSuccess: () => Results.NoContent());
+            })
+            .RequireAuthorization(Permissions.Users.AssignRole) // Protected
+            .WithName("AssignRoleToUser")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .MapToApiVersion(1, 0);
 
             return app;
         }
