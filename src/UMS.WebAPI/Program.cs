@@ -121,6 +121,19 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddLogging(configure => configure.AddConsole());
 
+var myAllowSpecificOrigins = "_myAllowSpecificOrigins";
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: myAllowSpecificOrigins,
+                      policy =>
+                      {
+                          policy.WithOrigins("http://localhost:4200") // Angular app's origin
+                                .AllowAnyHeader()
+                                .AllowAnyMethod();
+                      });
+});
+
 var app = builder.Build();
 
 // --- Configure the HTTP request pipeline ---
@@ -155,6 +168,9 @@ else
 }   
 
 app.UseHttpsRedirection();
+
+// Use the CORS policy
+app.UseCors(myAllowSpecificOrigins);
 
 // IMPORTANT: Add Authentication and Authorization middleware
 // UseAuthentication must come before UseAuthorization
