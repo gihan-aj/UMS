@@ -64,6 +64,7 @@ namespace UMS.Infrastructure
             services.Configure<ClientAppSettings>(configuration.GetSection(ClientAppSettings.SectionName));
             services.Configure<CleanupSettings>(configuration.GetSection(CleanupSettings.SectionName));
             services.Configure<AdminSettings>(configuration.GetSection(AdminSettings.SectionName));
+            services.Configure<SmtpSettings>(configuration.GetSection(SmtpSettings.SectionName));
 
             // Register the JWT token generator service
             services.AddScoped<IJwtTokenGeneratorService, JwtTokenGeneratorService>();
@@ -77,7 +78,8 @@ namespace UMS.Infrastructure
             // Register the dummy console email service.
             // When you want to send real emails, you'll replace ConsoleEmailService
             // with your actual implementation (e.g., SendGridEmailService).
-            services.AddTransient<IEmailService, ConsoleEmailService>();
+            //services.AddTransient<IEmailService, ConsoleEmailService>();
+            services.AddTransient<IEmailService, MailKitEmailService>();
 
             // Register the PasswordHasherService
             // It's stateless, so Transient or Scoped are fine. Singleton could also work.
