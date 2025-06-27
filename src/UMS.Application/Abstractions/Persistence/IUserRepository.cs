@@ -19,6 +19,8 @@ namespace UMS.Application.Abstractions.Persistence
 
         Task AddRefreshTokenAsync(RefreshToken refreshToken, CancellationToken cancellationToken);
 
+        Task<User?> GetUserByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken);
+
         Task<List<User>> GetAllUsersAsync(CancellationToken cancellationToken);
 
         Task<PagedList<User>> GetPagedListAsync(

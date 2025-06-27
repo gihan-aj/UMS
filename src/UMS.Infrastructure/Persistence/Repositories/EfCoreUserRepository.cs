@@ -87,6 +87,16 @@ namespace UMS.Infrastructure.Persistence.Repositories
             await _dbContext.RefreshTokens.AddAsync(refreshToken, cancellationToken);
         }
 
+        public async Task<User?> GetUserByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken)
+        {
+            var token = await _dbContext.RefreshTokens
+                .Include(rt => rt.User)
+                    .ThenInclude(u => u.RefreshTokens)
+                .FirstOrDefaultAsync(rt => rt.Token == refreshToken, cancellationToken);
+
+            return token?.User;
+        }
+
         public async Task<List<User>> GetAllUsersAsync(CancellationToken cancellationToken)
         {
             var users = await _dbContext.Users

@@ -7,6 +7,6 @@ namespace UMS.Application.Features.Users.Commands.LoginUser
         string Email,
         string UserCode,
         string Token, // The JWT
-        DateTime TokenExpieryUtc,
+        DateTime TokenExpiryUtc,
         string RefreshToken);
 }

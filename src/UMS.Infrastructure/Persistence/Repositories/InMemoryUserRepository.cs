@@ -85,6 +85,11 @@ namespace UMS.Infrastructure.Persistence.Repositories
             throw new NotImplementedException();
         }
 
+        public Task<User?> GetUserByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
         public void RemoveUserRolesRange(List<UserRole> userRoles)
         {
             throw new NotImplementedException();

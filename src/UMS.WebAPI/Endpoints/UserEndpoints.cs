@@ -3,11 +3,10 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Options;
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using UMS.Application.Features.Users.Commands.ActivateAccount;
-using UMS.Application.Features.Users.Commands.AssignRole;
 using UMS.Application.Features.Users.Commands.LoginUser;
 using UMS.Application.Features.Users.Commands.RefreshToken;
 using UMS.Application.Features.Users.Commands.RegisterUser;
@@ -17,10 +16,12 @@ using UMS.Application.Features.Users.Commands.ResetPassword;
 using UMS.Application.Features.Users.Commands.SetRoles;
 using UMS.Application.Features.Users.Queries.GetMyProfile;
 using UMS.Application.Features.Users.Queries.ListUsers;
+using UMS.Application.Settings;
 using UMS.Domain.Authorization;
 using UMS.SharedKernel;
 using UMS.WebAPI.Common;
 using UMS.WebAPI.Contracts.Requests.Users;
+using UMS.WebAPI.Contracts.Responses.Users;
 
 namespace UMS.WebAPI.Endpoints
 {
@@ -68,14 +69,33 @@ namespace UMS.WebAPI.Endpoints
             userGroup.MapPost("/login", async (
                 LoginUserCommand command,
                 ISender mediator,
+                HttpContext httpContext,
+                IOptions<TokenSettings> tokenSettingOptions,
                 CancellationToken cancellationToken) =>
             {
                 var result = await mediator.Send(command, cancellationToken);
-                // Login response contains the token, so we return it directly on success.
-                return result.ToHttpResult(onSuccess: Results.Ok);
+                if (result.IsFailure)
+                {
+                    return result.ToHttpResult();
+                }
+
+                // On success, set the refresh token in a secure HttpOnly cookie
+                SetRefreshTokenCookie(
+                    httpContext, 
+                    result.Value.RefreshToken,
+                    tokenSettingOptions.Value);
+
+                var response = new UserLoginResponse(
+                    result.Value.UserId,
+                    result.Value.Email,
+                    result.Value.UserCode,
+                    result.Value.Token,
+                    result.Value.TokenExpiryUtc);
+
+                return Results.Ok(response);
             })
                 .WithName("LoginUser")
-                .Produces<LoginUserResponse>(StatusCodes.Status200OK) // Success response type
+                .Produces<UserLoginResponse>(StatusCodes.Status200OK) // Success response type
                 .ProducesProblem(StatusCodes.Status400BadRequest)   // For validation errors
                 .ProducesProblem(StatusCodes.Status401Unauthorized) // For invalid credentials or inactive account
                 .ProducesProblem(StatusCodes.Status500InternalServerError)
@@ -157,15 +177,44 @@ namespace UMS.WebAPI.Endpoints
 
             // POST /api/v1/users/refresh-token
             userGroup.MapPost("/refresh-token", async (
-                RefreshTokenCommand command,
                 ISender mediator,
+                HttpContext httpContext,
+                IOptions<TokenSettings> tokenSettingOptions,
                 CancellationToken cancellationToken) =>
             {
+                // Read the refresh token from the incoming cookie
+                if(!httpContext.Request.Cookies.TryGetValue("refreshToken", out var refreshToken))
+                {
+                    return Results.Unauthorized();
+                }
+
+                var command = new RefreshTokenCommand(refreshToken);
                 var result = await mediator.Send(command, cancellationToken);
-                return result.ToHttpResult(onSuccess: Results.Ok);
+                if (result.IsFailure)
+                {
+                    // If refresh fails, clear the cookie
+                    httpContext.Response.Cookies.Delete("refreshToken");
+                    return result.ToHttpResult();
+                }
+
+                // On success, set the new refresh token in the cookie
+                SetRefreshTokenCookie(
+                    httpContext, 
+                    result.Value.RefreshToken, 
+                    tokenSettingOptions.Value);
+
+                // Return the new access token in the JSON body
+                var response = new UserLoginResponse(
+                    result.Value.UserId,
+                    result.Value.Email,
+                    result.Value.UserCode,
+                    result.Value.Token,
+                    result.Value.TokenExpiryUtc);
+
+                return Results.Ok(response);
             })
                 .WithName("RefreshToken")
-                .Produces<LoginUserResponse>(StatusCodes.Status200OK)
+                .Produces<UserLoginResponse>(StatusCodes.Status200OK)
                 .ProducesProblem(StatusCodes.Status400BadRequest)
                 .ProducesProblem(StatusCodes.Status401Unauthorized) // For invalid/revoked tokens
                 .MapToApiVersion(1, 0);
@@ -239,6 +288,23 @@ namespace UMS.WebAPI.Endpoints
             .MapToApiVersion(1, 0);
 
             return app;
+        }
+
+        private static void SetRefreshTokenCookie(
+            HttpContext httpContext, 
+            string refreshToken,
+            TokenSettings tokenSettings)
+        {
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true, // Prevent client-side script access
+                Expires = DateTime.UtcNow.AddDays(tokenSettings.RefreshTokenExpiryDays),
+                Secure = true, // Send only over HTTPS
+                IsEssential = true, // Needed for auth
+                SameSite = SameSiteMode.Strict // Or Lax, depending on the cross-site needs
+            };
+
+            httpContext.Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
         }
     }
 }
