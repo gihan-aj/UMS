@@ -9,7 +9,7 @@ using UMS.SharedKernel;
 
 namespace UMS.Infrastructure.Persistence.Repositories
 {
-    public class InMemoryUserRepository : IUserRepository 
+    public class InMemoryUserRepository : IUserRepository
     {
         // Static list to act as our in-memory data store.
         // In a real DI setup with singleton lifetime for this repo, static might not be needed,
@@ -45,6 +45,11 @@ namespace UMS.Infrastructure.Persistence.Repositories
             throw new NotImplementedException();
         }
 
+        public Task AddUserRolesRangeAsync(List<UserRole> userRoles, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<bool> ExistsByEmailAsync(string email)
         {
             bool exists;
@@ -76,6 +81,11 @@ namespace UMS.Infrastructure.Persistence.Repositories
         }
 
         public Task<PagedList<User>> GetPagedListAsync(int page, int pageSize, string? searchTerm, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RemoveUserRolesRange(List<UserRole> userRoles)
         {
             throw new NotImplementedException();
         }

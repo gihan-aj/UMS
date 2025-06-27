@@ -14,6 +14,7 @@ using UMS.Application.Features.Users.Commands.RegisterUser;
 using UMS.Application.Features.Users.Commands.RequestPasswordReset;
 using UMS.Application.Features.Users.Commands.ResendActivationEmail;
 using UMS.Application.Features.Users.Commands.ResetPassword;
+using UMS.Application.Features.Users.Commands.SetRoles;
 using UMS.Application.Features.Users.Queries.GetMyProfile;
 using UMS.Application.Features.Users.Queries.ListUsers;
 using UMS.Domain.Authorization;
@@ -219,21 +220,22 @@ namespace UMS.WebAPI.Endpoints
             // POST /api/v1/users/{userId}/roles
             userGroup.MapPost("/{userId:guid}/roles", async (
                 Guid userId,
-                AssignRoleRequest request, // A simple request body for the role ID
+                SetUserRolesRequest request, // A simple request body for the role ID
                 ISender mediator,
                 CancellationToken cancellationToken) =>
             {
-                var command = new AssignRoleToUserCommand(userId, request.RoleId);
+                var command = new SetUserRolesCommand(userId, request.RoleIds);
                 var result = await mediator.Send(command, cancellationToken);
                 return result.ToHttpResult(onSuccess: () => Results.NoContent());
             })
             .RequireAuthorization(Permissions.Users.AssignRole) // Protected
-            .WithName("AssignRoleToUser")
+            .WithName("SetUserRoles")
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict)
             .MapToApiVersion(1, 0);
 
             return app;

@@ -10,6 +10,11 @@ namespace UMS.Infrastructure.Persistence.Configurations
         {
             // Composite primary key
             builder.HasKey(ur => new { ur.UserId, ur.RoleId });
+
+            builder.HasOne(ur => ur.Role)
+                .WithMany()
+                .HasForeignKey(ur => ur.RoleId)
+                .IsRequired(false);
         }
     }
 }

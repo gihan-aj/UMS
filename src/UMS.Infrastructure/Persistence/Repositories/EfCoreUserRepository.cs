@@ -57,6 +57,7 @@ namespace UMS.Infrastructure.Persistence.Repositories
             string lowerEmail = email.ToLowerInvariant();
             return await _dbContext.Users
                 .Include(u => u.RefreshTokens)
+                .Include(u => u.UserRoles)
                 .FirstOrDefaultAsync(u => u.Email.ToLower() == lowerEmail);
         }
 
@@ -65,6 +66,8 @@ namespace UMS.Infrastructure.Persistence.Repositories
         {
             return await _dbContext.Users
                 .Include(u => u.RefreshTokens)
+                .Include(u => u.UserRoles)
+                    .ThenInclude(ur => ur.Role)
                 .FirstOrDefaultAsync(u => u.Id == id, cancellationToken); 
             // FindAsync respects query filters if the entity is not already tracked.
             // If tracked and soft-deleted, it might return it.
@@ -112,6 +115,16 @@ namespace UMS.Infrastructure.Persistence.Repositories
             }
 
             return await PagedList<User>.CreateAsync(query, page, pageSize, cancellationToken);
+        }
+
+        public void RemoveUserRolesRange(List<UserRole> userRoles)
+        {
+            _dbContext.UserRoles.RemoveRange(userRoles);
+        }
+
+        public async Task AddUserRolesRangeAsync(List<UserRole> userRoles, CancellationToken cancellationToken = default)
+        {
+            await _dbContext.UserRoles.AddRangeAsync(userRoles, cancellationToken);
         }
     }
 }

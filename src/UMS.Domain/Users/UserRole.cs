@@ -1,4 +1,5 @@
 ﻿using System;
+using UMS.Domain.Authorization;
 
 namespace UMS.Domain.Users
 {
@@ -10,5 +11,7 @@ namespace UMS.Domain.Users
         public Guid UserId { get; set; }
 
         public byte RoleId { get; set; }
+
+        public virtual Role Role { get; set; } = null!;
     }
 }

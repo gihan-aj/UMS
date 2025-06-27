@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using UMS.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using UMS.Infrastructure.Persistence;
 namespace UMS.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250624142352_AddRolePermissionFK")]
+    partial class AddRolePermissionFK
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -41,7 +44,7 @@ namespace UMS.Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasDatabaseName("ix_permissions_name");
 
-                    b.ToTable("permissions", (string)null);
+                    b.ToTable("permissions");
                 });
 
             modelBuilder.Entity("UMS.Domain.Authorization.Role", b =>
@@ -93,7 +96,7 @@ namespace UMS.Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasDatabaseName("ix_roles_name");
 
-                    b.ToTable("roles", (string)null);
+                    b.ToTable("roles");
                 });
 
             modelBuilder.Entity("UMS.Domain.Authorization.RolePermission", b =>
@@ -112,7 +115,7 @@ namespace UMS.Infrastructure.Persistence.Migrations
                     b.HasIndex("PermissionId")
                         .HasDatabaseName("ix_role_permissions_permission_id");
 
-                    b.ToTable("role_permissions", (string)null);
+                    b.ToTable("role_permissions");
                 });
 
             modelBuilder.Entity("UMS.Domain.Users.RefreshToken", b =>
@@ -160,7 +163,7 @@ namespace UMS.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId")
                         .HasDatabaseName("ix_refresh_tokens_user_id");
 
-                    b.ToTable("refresh_tokens", (string)null);
+                    b.ToTable("refresh_tokens");
                 });
 
             modelBuilder.Entity("UMS.Domain.Users.User", b =>
@@ -267,7 +270,7 @@ namespace UMS.Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasDatabaseName("ix_users_user_code");
 
-                    b.ToTable("users", (string)null);
+                    b.ToTable("users");
                 });
 
             modelBuilder.Entity("UMS.Domain.Users.UserRole", b =>
@@ -283,10 +286,7 @@ namespace UMS.Infrastructure.Persistence.Migrations
                     b.HasKey("UserId", "RoleId")
                         .HasName("pk_user_roles");
 
-                    b.HasIndex("RoleId")
-                        .HasDatabaseName("ix_user_roles_role_id");
-
-                    b.ToTable("user_roles", (string)null);
+                    b.ToTable("user_roles");
                 });
 
             modelBuilder.Entity("UMS.Infrastructure.Persistence.Entities.NumericSequence", b =>
@@ -305,7 +305,7 @@ namespace UMS.Infrastructure.Persistence.Migrations
                     b.HasKey("SequenceName")
                         .HasName("pk_numeric_sequences");
 
-                    b.ToTable("numeric_sequences", (string)null);
+                    b.ToTable("numeric_sequences");
                 });
 
             modelBuilder.Entity("UMS.Infrastructure.Persistence.Entities.ReferenceCodeSequence", b =>
@@ -328,7 +328,7 @@ namespace UMS.Infrastructure.Persistence.Migrations
                     b.HasKey("EntityTypePrefix", "SequenceDate")
                         .HasName("pk_reference_code_sequences");
 
-                    b.ToTable("reference_code_sequences", (string)null);
+                    b.ToTable("reference_code_sequences");
                 });
 
             modelBuilder.Entity("UMS.Domain.Authorization.RolePermission", b =>
@@ -362,19 +362,12 @@ namespace UMS.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("UMS.Domain.Users.UserRole", b =>
                 {
-                    b.HasOne("UMS.Domain.Authorization.Role", "Role")
-                        .WithMany()
-                        .HasForeignKey("RoleId")
-                        .HasConstraintName("fk_user_roles_roles_role_id");
-
                     b.HasOne("UMS.Domain.Users.User", null)
                         .WithMany("UserRoles")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_user_roles_users_user_id");
-
-                    b.Navigation("Role");
                 });
 
             modelBuilder.Entity("UMS.Domain.Authorization.Role", b =>

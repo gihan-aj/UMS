@@ -26,5 +26,9 @@ namespace UMS.Application.Abstractions.Persistence
             int pageSize,
             string? searchTerm,
             CancellationToken cancellationToken);
+
+        void RemoveUserRolesRange(List<UserRole> userRoles);
+
+        Task AddUserRolesRangeAsync(List<UserRole> userRoles, CancellationToken cancellationToken = default);
     }
 }
