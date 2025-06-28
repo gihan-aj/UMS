@@ -13,6 +13,7 @@ using UMS.Infrastructure.Authentication.Settings;
 using UMS.Infrastructure.Authorization;
 using UMS.Infrastructure.BackgroundJobs;
 using UMS.Infrastructure.Persistence;
+using UMS.Infrastructure.Persistence.Interceptors;
 using UMS.Infrastructure.Persistence.Repositories;
 using UMS.Infrastructure.Persistence.Seeders;
 using UMS.Infrastructure.Services;
@@ -26,22 +27,29 @@ namespace UMS.Infrastructure
             this IServiceCollection services,
             IConfiguration configuration)
         {
+            services.AddScoped<DispatchDomainEventsInterceptor>();
+
             // --- Database Context Registration ---
-            services.AddDbContext<ApplicationDbContext>(options =>
+            services.AddDbContext<ApplicationDbContext>((sp, options) =>
+            {
+                // Resolve the interceptor from the service provider
+                var interceptor = sp.GetRequiredService<DispatchDomainEventsInterceptor>();
+
                 options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"),
-                    // Optional: configure SQL Server specific options
                     sqlServerOptionsAction: sqlOptions =>
                     {
-                        // Specify the assembly where migrations are located.
-                        // This tells EF Core to look for migrations in the UMS.Infrastructure assembly.
-                        // When you run Add-Migration, ensure UMS.Infrastructure is the default project.
-                        // EF Core will then create/use a "Migrations" folder within this project structure.
-                        // To place it under Persistence/Migrations, ensure your DbContext is in Persistence
-                        // or manage the folder structure manually after generation if needed, though
-                        // EF Core typically creates "Migrations" at the root of the migrationsAssembly.
-                        // For better control, you can specify the output directory for migrations
-                        // via the -OutputDir parameter in Add-Migration command, e.g.,
-                        // Add-Migration InitialCreate -OutputDir Persistence/Migrations
+                        /**
+                         * Specify the assembly where migrations are located.
+                         * This tells EF Core to look for migrations in the UMS.Infrastructure assembly.
+                         * When you run Add-Migration, ensure UMS.Infrastructure is the default project.
+                         * EF Core will then create/use a "Migrations" folder within this project structure.
+                         * To place it under Persistence/Migrations, ensure your DbContext is in Persistence
+                         * or manage the folder structure manually after generation if needed, though
+                         * EF Core typically creates "Migrations" at the root of the migrationsAssembly.
+                         * For better control, you can specify the output directory for migrations
+                         * via the -OutputDir parameter in Add-Migration command, e.g.,
+                         * Add-Migration InitialCreate -OutputDir Persistence/Migrations
+                         */
                         sqlOptions.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName); // More robust
                         // Or: sqlOptions.MigrationsAssembly(Assembly.GetExecutingAssembly().FullName);
 
@@ -50,7 +58,13 @@ namespace UMS.Infrastructure
                             maxRetryCount: 5,
                             maxRetryDelay: TimeSpan.FromSeconds(30),
                             errorNumbersToAdd: null);
-                    }));
+
+                        // Configure split queries to avoid performance warnings
+                        // and improve efficiency for queries with multiple .Include() on collections.
+                        sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                    })
+                .AddInterceptors(interceptor);
+            });
 
             // --- Unit of Work Registration ---
             // UnitOfWork depends on ApplicationDbContext, so it should have a similar lifetime (Scoped).

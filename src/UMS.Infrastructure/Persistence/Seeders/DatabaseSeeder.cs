@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using UMS.Application.Abstractions.Services;
+using UMS.Application.Settings;
 using UMS.Domain.Authorization;
 using UMS.Domain.Users;
 using UMS.Infrastructure.Services;
@@ -20,7 +21,8 @@ namespace UMS.Infrastructure.Persistence.Seeders
         IPasswordHasherService _passwordHasher;
         IReferenceCodeGeneratorService _codeGenerator;
         ISequenceGeneratorService _sequenceGenerator;
-        AdminSettings _adminSettings; // Inject admin settings
+        AdminSettings _adminSettings;
+        TokenSettings _tokenSettings;
 
         public DatabaseSeeder(
             ApplicationDbContext dbContext,
@@ -28,6 +30,7 @@ namespace UMS.Infrastructure.Persistence.Seeders
             IPasswordHasherService passwordHasher,
             IReferenceCodeGeneratorService codeGenerator,
             IOptions<AdminSettings> adminSettings,
+            IOptions<TokenSettings> tokenSettings,
             ISequenceGeneratorService sequenceGenerator)
         {
             _dbContext = dbContext;
@@ -36,6 +39,7 @@ namespace UMS.Infrastructure.Persistence.Seeders
             _codeGenerator = codeGenerator;
             _adminSettings = adminSettings.Value;
             _sequenceGenerator = sequenceGenerator;
+            _tokenSettings = tokenSettings.Value;
         }
 
         public async Task SeedAsync(CancellationToken cancellationToken = default)
@@ -75,6 +79,7 @@ namespace UMS.Infrastructure.Persistence.Seeders
                     passwordHash,
                     _adminSettings.FirstName,
                     _adminSettings.LastName,
+                    _tokenSettings.ActivationTokenExpiryHours,
                     Guid.Empty); // System created
 
                 adminUser.AssignRole(superAdminRole.Id, Guid.Empty);

@@ -10,7 +10,7 @@ namespace UMS.Domain.Primitives
     /// Base class for aggregate roots, providing support for domain events.
     /// </summary>
     /// <typeparam name="TId">The type of the aggregate root's identifier.</typeparam>
-    public abstract class AggregateRoot<TId> : AuditableEntity<TId> 
+    public abstract class AggregateRoot<TId> : AuditableEntity<TId> , IAggregateRoot
         where TId : notnull
     {
         private readonly List<DomainEvent> _domainEvents = new();

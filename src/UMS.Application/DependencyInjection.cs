@@ -3,8 +3,8 @@ using FluentValidation;
 using Mediator;
 using Microsoft.Extensions.DependencyInjection;
 using UMS.Application.Common.Behaviors;
-using UMS.Application.Features.Users.NotificationHandlers;
-using UMS.Application.Features.Users.Notifications;
+using UMS.Application.Features.Users.EventHandlers;
+using UMS.Domain.Users.Events;
 
 namespace UMS.Application
 {
@@ -50,8 +50,7 @@ namespace UMS.Application
             services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationPipelineBehavior<,>));
 
             // If you prefer explicit registration or if the scan isn't picking them up:
-            services.AddTransient<INotificationHandler<UserCreatedNotification>, SendWelcomeEmailOnUserCreatedHandler>();
-            services.AddTransient<INotificationHandler<UserCreatedNotification>, LogUserActivityOnUserCreatedHandler>();
+            //services.AddTransient<INotificationHandler<UserCreatedDomainEvent>, SendActivationEmailOnUserCreatedHandler>();
 
             return services;
         }
