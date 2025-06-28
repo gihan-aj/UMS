@@ -90,45 +90,8 @@ namespace UMS.Application.Features.Users.Commands.ActivateAccount
             // The UnitOfWork will save the changes made to the tracked 'user' entity.
 
             // 5. Save changes to the database.
-            var domainEvents = user.GetDomainEvents().ToList();
-            user.ClearDomainEvents();
-
-            try
-            {
-                await _unitOfWork.SaveChangesAsync(cancellationToken);
-                _logger.LogInformation("User account {UserId} successfully activated and changes persisted.", user.Id);
-            }
-            catch(DbUpdateException ex)
-            {
-                _logger.LogError(ex, "DbUpdateException during account activation for User ID: {UserId}", user.Id);
-                return Result.Failure(new Error(
-                    "Activation.PersistenceError.DbUpdate", 
-                    "A database error occurred while activating the account.", 
-                    ErrorType.Failure));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Generic exception during account activation for User ID: {UserId}", user.Id);
-                return Result.Failure(new Error(
-                    "Activation.PersistenceError.Generic", 
-                    "An unexpected error occurred while activating the account.", 
-                    ErrorType.Failure));
-            }
-
-            // 6. Publish domain events (UserAccountActivatedDomainEvent).
-            foreach (var domainEvent in domainEvents)
-            {
-                try
-                {
-                    await _publisher.Publish(domainEvent, cancellationToken);
-                    _logger.LogInformation("Domain event {DomainEventType} published for User ID: {UserId} after activation.", domainEvent.GetType().Name, user.Id);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Exception during publishing domain event {DomainEventType} for User ID: {UserId} after activation.", domainEvent.GetType().Name, user.Id);
-                    // Log and continue; activation itself was successful.
-                }
-            }
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            _logger.LogInformation("User account {UserId} successfully activated and changes persisted.", user.Id);
 
             return Result.Success();
         }
