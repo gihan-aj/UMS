@@ -130,6 +130,18 @@ namespace UMS.Domain.Users
             ActivationTokenExpiryUtc = DateTime.UtcNow.AddHours(expiryHours);
             IsActive = false; // Ensure user is inactive when a new token is generated
         }
+        
+        public void RegenerateActivationToken(int expiryHours = 24)
+        {
+            GenerateActivationToken(expiryHours);
+
+            if(ActivationToken is null)
+            {
+                throw new Exception("Failed to create an activation token.");
+            }
+
+            RaiseDomainEvent(new UserActivationTokenRegeneratedEvent(this.Id, this.Email, this.ActivationToken));
+        }
 
         public bool ValidateActivationToken(string token)
         {
@@ -186,6 +198,8 @@ namespace UMS.Domain.Users
         {
             PasswordResetToken = GenerateUrlSafeToken();
             PasswordResetTokenExpiryUtc = DateTime.UtcNow.AddMinutes(expiryMinutes);
+
+            RaiseDomainEvent(new UserPasswordResetRequestedEvent(this.Id, this.Email, this.PasswordResetToken));
         }
 
         public void ResetPassword(string newPasswordHash, string providedToken)

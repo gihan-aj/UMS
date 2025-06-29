@@ -1,10 +1,8 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using UMS.Application.Abstractions.Persistence;
-using UMS.Application.Abstractions.Services;
 using UMS.Application.Common.Messaging.Commands;
 using UMS.Application.Settings;
 using UMS.SharedKernel;
@@ -15,24 +13,18 @@ namespace UMS.Application.Features.Users.Commands.RequestPasswordReset
     {
         private readonly IUserRepository _userRepository;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IEmailService _emailService;
         private readonly TokenSettings _tokenSettings;
-        private readonly ClientAppSettings _clientAppSettings;
         private readonly ILogger<RequestPasswordResetCommandHandler> _logger;
 
         public RequestPasswordResetCommandHandler(
             IUserRepository userRepository, 
             IUnitOfWork unitOfWork, 
-            IEmailService emailService,
             IOptions<TokenSettings> tokenSettings,
-            IOptions<ClientAppSettings> clientAppSettings,
             ILogger<RequestPasswordResetCommandHandler> logger)
         {
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
-            _emailService = emailService;
             _tokenSettings = tokenSettings.Value;
-            _clientAppSettings = clientAppSettings.Value;
             _logger = logger;
         }
 
@@ -50,27 +42,12 @@ namespace UMS.Application.Features.Users.Commands.RequestPasswordReset
                 return Result.Success(); // Do nothing, but don't tell the client.
             }
 
-            try
-            {
-                user.GeneratePasswordResetToken(_tokenSettings.PasswordResetTokenExpiryMinutes); // Domain method generates new token and expiry
-                _logger.LogInformation("Generated password reset token for user {UserId}", user.Id);
+            // The GeneratePasswordResetToken method now raises the domain event
+            user.GeneratePasswordResetToken(_tokenSettings.PasswordResetTokenExpiryMinutes);
+            _logger.LogInformation("Generated password reset token for user {UserId}", user.Id);
 
-                await _unitOfWork.SaveChangesAsync(cancellationToken);
-                _logger.LogInformation("Saved password reset token for user {UserId}", user.Id);
-
-                // Send password reset email
-                string resetLink = $"{_clientAppSettings.PasswordResetLinkBaseUrl}?token={Uri.EscapeDataString(user.PasswordResetToken!)}&email={Uri.EscapeDataString(user.Email)}";
-                string subject = "Reset Your UMS Password";
-                string body = $"<h1>Password Reset Request</h1><p>Please reset your password by clicking the link below:</p><p><a href='{resetLink}'>Reset Password</a></p><p>This link will expire in 30 minutes.</p><p>If you did not request this, please ignore this email.</p>";
-
-                await _emailService.SendEmailAsync(user.Email, subject, body);
-                _logger.LogInformation("Password reset email simulation sent to {Email}", user.Email);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred during password reset request for user {UserId}", user.Id);
-                // Even on failure, return a generic success to prevent leaking information.
-            }
+            // The interceptor will publish the UserPasswordResetRequestedEvent after this succeeds.
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             return Result.Success();
         }

@@ -1,15 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 using UMS.Application.Abstractions.Persistence;
-using UMS.Application.Abstractions.Services;
 using UMS.Application.Common.Messaging.Commands;
 using UMS.Application.Settings;
 using UMS.SharedKernel;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace UMS.Application.Features.Users.Commands.ResendActivationEmail
 {
@@ -17,22 +13,17 @@ namespace UMS.Application.Features.Users.Commands.ResendActivationEmail
     {
         private readonly IUserRepository _userRepository;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IEmailService _emailService;
         private readonly ILogger<ResendActivationEmailCommandHandler> _logger;
         private readonly TokenSettings _tokenSettings;
-        // Placeholder: This should ideally come from configuration or a dedicated service
-        private const string ActivationLinkBaseUrl = "https://localhost:7026/api/v1/users/activate";
 
         public ResendActivationEmailCommandHandler(
             IUserRepository userRepository,
             IUnitOfWork unitOfWork,
-            IEmailService emailService,
             IOptions<TokenSettings> tokenSettings,
             ILogger<ResendActivationEmailCommandHandler> logger)
         {
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
-            _emailService = emailService;
             _tokenSettings = tokenSettings.Value;
             _logger = logger;
         }
@@ -70,62 +61,12 @@ namespace UMS.Application.Features.Users.Commands.ResendActivationEmail
                    ErrorType.Conflict));
             }
 
-            // Generate a new activation token (this also sets IsActive = false and updates expiry)
-            try
-            {
-                user.GenerateActivationToken(_tokenSettings.ActivationTokenExpiryHours); // Domain method to create a new token
-                _logger.LogInformation("New activation token generated for user {UserId}, email {Email}.", user.Id, command.Email);
-            }
-            catch (System.Exception ex)
-            {
-                _logger.LogError(ex, "Error generating new activation token for user {UserId}", user.Id);
-                return Result.Failure(new Error("Token.GenerationError", "Could not generate a new activation token.", ErrorType.Failure));
-            }
+            // The RegenerateActivationToken method now raises the domain event
+            user.RegenerateActivationToken(_tokenSettings.ActivationTokenExpiryHours);
+            _logger.LogInformation("New activation token generated for user {UserId}", user.Id);
 
-            // The User entity has its ActivationToken and ActivationTokenExpiryUtc updated.
-            // We need to persist these changes.
-            // No explicit call to _userRepository.UpdateAsync(user) is needed if using EF Core change tracking.
-            // The UnitOfWork will save the changes made to the tracked 'user' entity.
-
-            try
-            {
-                await _unitOfWork.SaveChangesAsync(cancellationToken);
-                _logger.LogInformation("New activation token for user {UserId} persisted.", user.Id);
-            }
-            catch (DbUpdateException ex)
-            {
-                _logger.LogError(ex, "DbUpdateException while saving new activation token for User ID: {UserId}", user.Id);
-                return Result.Failure(new Error("Token.PersistenceError.DbUpdate", "A database error occurred while saving the new activation token.", ErrorType.Failure));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Generic exception while saving new activation token for User ID: {UserId}", user.Id);
-                return Result.Failure(new Error("Token.PersistenceError.Generic", "An unexpected error occurred while saving the new activation token.", ErrorType.Failure));
-            }
-
-            // Send the new activation email
-            if (string.IsNullOrEmpty(user.ActivationToken))
-            {
-                // This should not happen if GenerateActivationToken worked correctly
-                _logger.LogError("Activation token is unexpectedly null after generation for user {UserId}", user.Id);
-                return Result.Failure(new Error("Token.MissingAfterGeneration", "Failed to prepare activation email: token missing.", ErrorType.Failure));
-            }
-
-            string activationLink = $"{ActivationLinkBaseUrl}?token={Uri.EscapeDataString(user.ActivationToken)}&email={Uri.EscapeDataString(user.Email)}";
-            string emailSubject = "Activate Your UMS Account (New Link)";
-            string emailHtmlBody = $"<h1>Activate Your UMS Account</h1><p>We received a request to resend your account activation link. Please activate your account by clicking the link below:</p><p><a href='{activationLink}'>Activate Account</a></p><p>If you did not request this, please ignore this email.</p><p>Token: {user.ActivationToken}</p>"; // Token in body for easy testing
-
-            bool emailSent = await _emailService.SendEmailAsync(user.Email, emailSubject, emailHtmlBody);
-            if (!emailSent)
-            {
-                _logger.LogWarning("Failed to resend activation email simulation to {Email} for user {UserId}.", user.Email, user.Id);
-                // Even if email sending fails, the token was generated and saved.
-                // You might return a success but log the email issue, or return a specific error.
-                // For now, let's indicate an issue but consider the token part done.
-                return Result.Failure(new Error("Email.SendFailed", "Account activation link has been updated, but there was an issue resending the email. Please try activating later or contact support.", ErrorType.Failure));
-            }
-
-            _logger.LogInformation("New activation email simulation sent to {Email} for user {UserId}.", user.Email, user.Id);
+            // The interceptor will publish the UserActivationTokenRegeneratedEvent after this succeeds.
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
             return Result.Success();
         }
     }
