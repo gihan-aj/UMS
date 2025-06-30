@@ -15,6 +15,8 @@ using UMS.Application.Features.Users.Commands.RequestPasswordReset;
 using UMS.Application.Features.Users.Commands.ResendActivationEmail;
 using UMS.Application.Features.Users.Commands.ResetPassword;
 using UMS.Application.Features.Users.Commands.SetRoles;
+using UMS.Application.Features.Users.Commands.UpdateMyProfile;
+using UMS.Application.Features.Users.Commands.UpdateUser;
 using UMS.Application.Features.Users.Queries.GetMyProfile;
 using UMS.Application.Features.Users.Queries.ListUsers;
 using UMS.Application.Settings;
@@ -60,6 +62,24 @@ namespace UMS.WebAPI.Endpoints
                 .ProducesProblem(StatusCodes.Status401Unauthorized) // If not authenticated
                 .ProducesProblem(StatusCodes.Status404NotFound)   // If user from token not found in DB
                 .MapToApiVersion(1, 0);
+            
+            // PUT /api/v1/users/me
+            userGroup.MapPut("/me", async (
+                UpdateUserRequest request,
+                ISender mediator,
+                CancellationToken cancellationToken) => 
+            {
+                var command = new UpdateMyProfileCommand(request.FirstName, request.LastName);
+                var result = await mediator.Send(command, cancellationToken);
+                return result.ToHttpResult(onSuccess: () => Results.NoContent());
+            })
+                .RequireAuthorization() // This makes the endpoint protected!
+                .WithName("UpdateMyProfile")
+                .Produces(StatusCodes.Status204NoContent)
+                .ProducesProblem(StatusCodes.Status400BadRequest)
+                .ProducesProblem(StatusCodes.Status401Unauthorized) // If not authenticated
+                .ProducesProblem(StatusCodes.Status404NotFound)   // If user from token not found in DB
+                .MapToApiVersion(1, 0);
 
             // --- ADMIN ENDPOINTS ---
 
@@ -91,6 +111,26 @@ namespace UMS.WebAPI.Endpoints
                 .Produces<object>(StatusCodes.Status200OK)
                 .ProducesProblem(StatusCodes.Status404NotFound)
                 .MapToApiVersion(1, 0); // Explicitly map this endpoint to v1.0;
+
+            // PUT /api/v1/users/{id}
+            userGroup.MapPut("/{id:guid}", async (
+                Guid id,
+                UpdateUserRequest request,
+                ISender mediator,
+                CancellationToken cancellationToken) =>
+            {
+                var command = new UpdateUserCommand(id, request.FirstName, request.LastName);
+                var result = await mediator.Send(command, cancellationToken);
+                return result.ToHttpResult(onSuccess: () => Results.NoContent());
+            })
+                .RequireAuthorization(Permissions.Users.Update)
+                .WithName("UpdateUser")
+                .Produces(StatusCodes.Status204NoContent)
+                .ProducesProblem(StatusCodes.Status400BadRequest)
+                .ProducesProblem(StatusCodes.Status401Unauthorized)
+                .ProducesProblem(StatusCodes.Status403Forbidden)
+                .ProducesProblem(StatusCodes.Status404NotFound)
+                .MapToApiVersion(1, 0);
 
             // POST /api/v1/users/{userId}/roles
             userGroup.MapPost("/{userId:guid}/roles", async (

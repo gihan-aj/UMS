@@ -1,4 +1,4 @@
-﻿namespace UMS.Infrastructure.Settings
+﻿namespace UMS.Application.Settings
 {
     public class AdminSettings
     {
