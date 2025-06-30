@@ -178,6 +178,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 // --- Map Organized Minimal API Endpoints ---
+app.MapAuthApiEndpoints();
 app.MapUserApiEndpoints();
 app.MapRoleApiEndpoints();
 
