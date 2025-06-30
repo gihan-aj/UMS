@@ -8,6 +8,7 @@ using System;
 using System.Threading;
 using UMS.Application.Features.Users.Commands.ActivateAccount;
 using UMS.Application.Features.Users.Commands.LoginUser;
+using UMS.Application.Features.Users.Commands.LogoutUser;
 using UMS.Application.Features.Users.Commands.RefreshToken;
 using UMS.Application.Features.Users.Commands.RegisterUser;
 using UMS.Application.Features.Users.Commands.RequestPasswordReset;
@@ -235,6 +236,32 @@ namespace UMS.WebAPI.Endpoints
                 .Produces<UserProfileResponse>(StatusCodes.Status200OK)
                 .ProducesProblem(StatusCodes.Status401Unauthorized) // If not authenticated
                 .ProducesProblem(StatusCodes.Status404NotFound)   // If user from token not found in DB
+                .MapToApiVersion(1, 0);
+
+            // POST /api/v1/users/logout
+            userGroup.MapPost("/logout", async (
+                ISender mediator,
+                HttpContext httpContext,
+                CancellationToken cancellationToken) =>
+            {
+                if(!httpContext.Request.Cookies.TryGetValue("refreshToken", out var refreshToken) || string.IsNullOrEmpty(refreshToken))
+                {
+                    // No cookie, so the user is effectively logged out
+                    return Results.NoContent();
+                }
+
+                var command = new LogoutUserCommand(refreshToken);
+                await mediator.Send(command, cancellationToken);
+
+                // Clear the cookie on the client browser
+                httpContext.Response.Cookies.Delete("refreshToken");
+
+                return Results.NoContent();
+            })
+                .RequireAuthorization() // Must be logged in (with a valid access token) to log out
+                .WithName("LogoutUser")
+                .Produces(StatusCodes.Status204NoContent)
+                .ProducesProblem(StatusCodes.Status401Unauthorized)
                 .MapToApiVersion(1, 0);
 
             // GET /api/v1/users
