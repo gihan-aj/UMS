@@ -190,6 +190,11 @@ namespace UMS.Domain.Users
             }
 
             IsActive = false;
+            // When an admin deactivates an account, clear any pending activation tokens
+            // to prevent the user from re-activating themselves.
+            ActivationToken = null;
+            ActivationTokenExpiryUtc = null;
+
             SetModificationAudit(modifiedByUserId);
             RaiseDomainEvent(new UserAccountDeactivatedDomainEvent(Id, DateTime.UtcNow));
         }

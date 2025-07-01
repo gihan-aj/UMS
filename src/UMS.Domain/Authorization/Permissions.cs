@@ -18,6 +18,7 @@ namespace UMS.Domain.Authorization
             public const string Update = "users:update";
             public const string Delete = "users:delete";
             public const string AssignRole = "users:assign_role";
+            public const string ManageStatus = "users:manage_status";
         }
         
         public static class Roles

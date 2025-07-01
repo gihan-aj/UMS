@@ -3,28 +3,19 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Options;
 using System;
 using System.Threading;
-using UMS.Application.Features.Users.Commands.ActivateAccount;
-using UMS.Application.Features.Users.Commands.LoginUser;
-using UMS.Application.Features.Users.Commands.LogoutUser;
-using UMS.Application.Features.Users.Commands.RefreshToken;
-using UMS.Application.Features.Users.Commands.RegisterUser;
-using UMS.Application.Features.Users.Commands.RequestPasswordReset;
-using UMS.Application.Features.Users.Commands.ResendActivationEmail;
-using UMS.Application.Features.Users.Commands.ResetPassword;
+using UMS.Application.Features.Users.Commands.ActivateUserbyAdmin;
+using UMS.Application.Features.Users.Commands.DeactivateUserByAdmin;
 using UMS.Application.Features.Users.Commands.SetRoles;
 using UMS.Application.Features.Users.Commands.UpdateMyProfile;
 using UMS.Application.Features.Users.Commands.UpdateUser;
 using UMS.Application.Features.Users.Queries.GetMyProfile;
 using UMS.Application.Features.Users.Queries.ListUsers;
-using UMS.Application.Settings;
 using UMS.Domain.Authorization;
 using UMS.SharedKernel;
 using UMS.WebAPI.Common;
 using UMS.WebAPI.Contracts.Requests.Users;
-using UMS.WebAPI.Contracts.Responses.Users;
 
 namespace UMS.WebAPI.Endpoints
 {
@@ -152,6 +143,42 @@ namespace UMS.WebAPI.Endpoints
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status409Conflict)
             .MapToApiVersion(1, 0);
+
+            // POST /api/v1/users/{userId}/activate
+            userGroup.MapPost("/{userId:guid}/activate", async (
+                Guid userId,
+                ISender mediator,
+                CancellationToken cancellationToken) =>
+            {
+                var command = new ActivateUserByAdminCommand(userId);
+                var result = await mediator.Send(command, cancellationToken);
+                return result.ToHttpResult(onSuccess: () => Results.NoContent());
+            })
+                .RequireAuthorization(Permissions.Users.ManageStatus)
+                .WithName("ActivateUserByAdmin")
+                .Produces(StatusCodes.Status204NoContent)
+                .ProducesProblem(StatusCodes.Status401Unauthorized)
+                .ProducesProblem(StatusCodes.Status403Forbidden)
+                .ProducesProblem(StatusCodes.Status404NotFound)
+                .MapToApiVersion(1, 0);
+            
+            // POST /api/v1/users/{userId}/deactivate
+            userGroup.MapPost("/{userId:guid}/deactivate", async (
+                Guid userId,
+                ISender mediator,
+                CancellationToken cancellationToken) =>
+            {
+                var command = new DeactivateUserByAdminCommand(userId);
+                var result = await mediator.Send(command, cancellationToken);
+                return result.ToHttpResult(onSuccess: () => Results.NoContent());
+            })
+                .RequireAuthorization(Permissions.Users.ManageStatus)
+                .WithName("DeactivateUserByAdmin")
+                .Produces(StatusCodes.Status204NoContent)
+                .ProducesProblem(StatusCodes.Status401Unauthorized)
+                .ProducesProblem(StatusCodes.Status403Forbidden)
+                .ProducesProblem(StatusCodes.Status404NotFound)
+                .MapToApiVersion(1, 0);
 
             return app;
         }
