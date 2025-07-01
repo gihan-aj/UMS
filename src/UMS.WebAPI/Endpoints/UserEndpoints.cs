@@ -7,6 +7,7 @@ using System;
 using System.Threading;
 using UMS.Application.Features.Users.Commands.ActivateUserbyAdmin;
 using UMS.Application.Features.Users.Commands.DeactivateUserByAdmin;
+using UMS.Application.Features.Users.Commands.DeleteUser;
 using UMS.Application.Features.Users.Commands.SetRoles;
 using UMS.Application.Features.Users.Commands.UpdateMyProfile;
 using UMS.Application.Features.Users.Commands.UpdateUser;
@@ -178,6 +179,25 @@ namespace UMS.WebAPI.Endpoints
                 .ProducesProblem(StatusCodes.Status401Unauthorized)
                 .ProducesProblem(StatusCodes.Status403Forbidden)
                 .ProducesProblem(StatusCodes.Status404NotFound)
+                .MapToApiVersion(1, 0);
+            
+            // DELETE /api/v1/users/{userId}
+            userGroup.MapDelete("/{userId:guid}", async (
+                Guid userId,
+                ISender mediator,
+                CancellationToken cancellationToken) =>
+            {
+                var command = new DeleteUserCommand(userId);
+                var result = await mediator.Send(command, cancellationToken);
+                return result.ToHttpResult(onSuccess: () => Results.NoContent());
+            })
+                .RequireAuthorization(Permissions.Users.Delete)
+                .WithName("DeleteUser")
+                .Produces(StatusCodes.Status204NoContent)
+                .ProducesProblem(StatusCodes.Status401Unauthorized)
+                .ProducesProblem(StatusCodes.Status403Forbidden)
+                .ProducesProblem(StatusCodes.Status404NotFound)
+                .ProducesProblem(StatusCodes.Status409Conflict)
                 .MapToApiVersion(1, 0);
 
             return app;
