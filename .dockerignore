@@ -1,0 +1,13 @@
+# .dockerignore
+
+## Ignore all bin and obj folders
+**/bin
+**/obj
+
+# Ignore tooling and local user settings
+.vs
+.vscode
+.idea
+*.suo
+*.user
+!**/.dockerignore
