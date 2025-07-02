@@ -21,6 +21,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{10C9532A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UMS.Application.UnitTests", "tests\UMS.Application.UnitTests\UMS.Application.UnitTests.csproj", "{FABC6F93-8825-40CA-889F-33E49E188483}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UMS.API.IntegrationTests", "tests\UMS.API.IntegrationTests\UMS.API.IntegrationTests.csproj", "{234E95CA-7A16-49A9-921A-6B97C93B9FEE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,6 +57,10 @@ Global
 		{FABC6F93-8825-40CA-889F-33E49E188483}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FABC6F93-8825-40CA-889F-33E49E188483}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FABC6F93-8825-40CA-889F-33E49E188483}.Release|Any CPU.Build.0 = Release|Any CPU
+		{234E95CA-7A16-49A9-921A-6B97C93B9FEE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{234E95CA-7A16-49A9-921A-6B97C93B9FEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{234E95CA-7A16-49A9-921A-6B97C93B9FEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{234E95CA-7A16-49A9-921A-6B97C93B9FEE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -67,6 +73,7 @@ Global
 		{576A08CA-9616-48FB-A425-F59CC3BF5608} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{462A3938-0FF4-4F90-A340-88F809624D73} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{FABC6F93-8825-40CA-889F-33E49E188483} = {10C9532A-CF8D-485C-B83A-DA7D2D7DB5BB}
+		{234E95CA-7A16-49A9-921A-6B97C93B9FEE} = {10C9532A-CF8D-485C-B83A-DA7D2D7DB5BB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1500FE3A-FABB-48AD-B514-762800B55A72}
