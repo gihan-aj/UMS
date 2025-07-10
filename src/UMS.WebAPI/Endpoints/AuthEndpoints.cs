@@ -242,7 +242,7 @@ namespace UMS.WebAPI.Endpoints
                 Expires = DateTime.UtcNow.AddDays(tokenSettings.RefreshTokenExpiryDays),
                 Secure = true, // Send only over HTTPS
                 IsEssential = true, // Needed for auth
-                SameSite = SameSiteMode.Strict // Or Lax, depending on the cross-site needs
+                SameSite = SameSiteMode.None // Or Lax, depending on the cross-site needs
             };
 
             httpContext.Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
