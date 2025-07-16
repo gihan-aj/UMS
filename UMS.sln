@@ -29,6 +29,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Dockerfile = Dockerfile
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UMS.Domain.UnitTests", "tests\UMS.Domain.UnitTests\UMS.Domain.UnitTests.csproj", "{05099633-E587-4740-BDE4-5EC904E74B1A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -67,6 +69,10 @@ Global
 		{234E95CA-7A16-49A9-921A-6B97C93B9FEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{234E95CA-7A16-49A9-921A-6B97C93B9FEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{234E95CA-7A16-49A9-921A-6B97C93B9FEE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{05099633-E587-4740-BDE4-5EC904E74B1A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05099633-E587-4740-BDE4-5EC904E74B1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05099633-E587-4740-BDE4-5EC904E74B1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05099633-E587-4740-BDE4-5EC904E74B1A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -80,6 +86,7 @@ Global
 		{462A3938-0FF4-4F90-A340-88F809624D73} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{FABC6F93-8825-40CA-889F-33E49E188483} = {10C9532A-CF8D-485C-B83A-DA7D2D7DB5BB}
 		{234E95CA-7A16-49A9-921A-6B97C93B9FEE} = {10C9532A-CF8D-485C-B83A-DA7D2D7DB5BB}
+		{05099633-E587-4740-BDE4-5EC904E74B1A} = {10C9532A-CF8D-485C-B83A-DA7D2D7DB5BB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1500FE3A-FABB-48AD-B514-762800B55A72}
