@@ -61,6 +61,15 @@ namespace UMS.Application.Features.Users.Commands.LoginUser
                     "Your account is not active. Please activate your account or contact support.",
                     ErrorType.Unauthorized));
             }
+            
+            if (user.PasswordHash is null)
+            {
+                _logger.LogWarning("Login failed: Account for email {Email} is not set the password.", command.Email);
+                return Result.Failure<LoginUserResponse>(new Error(
+                    "Auth.PasswordNotSet",
+                    "Your did not set a password for your acccount. Please set a password for your account.",
+                    ErrorType.Unauthorized));
+            }
 
             // 3. Verify password
             bool isPasswordValid = _passwordHasherService.VerifyPassword(command.Password, user.PasswordHash);
@@ -105,7 +114,7 @@ namespace UMS.Application.Features.Users.Commands.LoginUser
 
             // 5. Update last login time (optional, but good practice)
             //    The User entity now has RecordLogin method
-            user.RecordLogin(user.Id); // Pass user.Id as modifier for now, or setup ICurrentUserService
+            user.RecordLogin(); // Pass user.Id as modifier for now, or setup ICurrentUserService
             // No need to explicitly call _userRepository.UpdateAsync(user) if using EF Core change tracking
             // and SaveChangesAsync is called by UnitOfWork.
 

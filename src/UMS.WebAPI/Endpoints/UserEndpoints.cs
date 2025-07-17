@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Routing;
 using System;
 using System.Threading;
 using UMS.Application.Features.Users.Commands.ActivateUserbyAdmin;
+using UMS.Application.Features.Users.Commands.CreateUserByAdmin;
 using UMS.Application.Features.Users.Commands.DeactivateUserByAdmin;
 using UMS.Application.Features.Users.Commands.DeleteUser;
 using UMS.Application.Features.Users.Commands.SetRoles;
@@ -74,6 +75,30 @@ namespace UMS.WebAPI.Endpoints
                 .MapToApiVersion(1, 0);
 
             // --- ADMIN ENDPOINTS ---
+
+            // POST /api/v1/users
+            userGroup.MapPost("/", async (
+                CreateUserRequest request,
+                ISender mediator,
+                CancellationToken cancellationToken
+                ) =>
+            {
+                var command = new CreateUserByAdminCommand(
+                    request.Email, 
+                    request.FirstName, 
+                    request.LastName,
+                    request.RoleIds);
+
+                var result = await mediator.Send(command, cancellationToken);
+                return result.ToHttpResult(
+                    onSuccess: (userId) => Results.CreatedAtRoute("GetUserById", new { version = "1", id = userId }, new { Id = userId }));
+            })
+                .RequireAuthorization(Permissions.Users.Create)
+                .WithName("CreateUserByAdmin")
+                .Produces<Guid>(StatusCodes.Status201Created)
+                .ProducesProblem(StatusCodes.Status400BadRequest)
+                .ProducesProblem(StatusCodes.Status404NotFound)   
+                .MapToApiVersion(1, 0);
 
             // GET /api/v1/users
             userGroup.MapGet("/", async (  

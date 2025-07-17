@@ -32,7 +32,7 @@ namespace UMS.Infrastructure.Persistence.Configurations
                 .HasMaxLength(100);
 
             builder.Property(u => u.PasswordHash)
-                .IsRequired()
+                .IsRequired(false)
                 .HasMaxLength(255);
 
             // ActivationToken - Set max length

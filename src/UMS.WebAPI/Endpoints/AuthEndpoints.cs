@@ -15,6 +15,7 @@ using UMS.Application.Features.Users.Commands.RegisterUser;
 using UMS.Application.Features.Users.Commands.RequestPasswordReset;
 using UMS.Application.Features.Users.Commands.ResendActivationEmail;
 using UMS.Application.Features.Users.Commands.ResetPassword;
+using UMS.Application.Features.Users.Commands.SetInitialPassword;
 using UMS.Application.Settings;
 using UMS.WebAPI.Common;
 using UMS.WebAPI.Contracts.Responses.Users;
@@ -226,6 +227,18 @@ namespace UMS.WebAPI.Endpoints
                 .Produces(StatusCodes.Status200OK)
                 .ProducesProblem(StatusCodes.Status400BadRequest)
                 .ProducesProblem(StatusCodes.Status422UnprocessableEntity) // For invalid/expired token
+                .MapToApiVersion(1, 0);
+
+            // POST /api/v1/auth/set-initial-password
+            authGroup.MapPost("/set-initial-password", async (
+                SetInitialPasswordCommand command,
+                ISender mediator,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await mediator.Send(command, cancellationToken);
+                return result.ToHttpResult(onSuccess: () => Results.Ok("Your password has been set and your account is now active."));
+            })
+                .WithName("SetInitialPassword")
                 .MapToApiVersion(1, 0);
 
             return app;
