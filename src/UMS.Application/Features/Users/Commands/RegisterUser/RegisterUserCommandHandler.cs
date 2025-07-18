@@ -61,7 +61,7 @@ namespace UMS.Application.Features.Users.Commands.RegisterUser
             var userCode = await _referenceCodeGeneratorService.GenerateReferenceCodeAsync("USR");
             var passwordHash = _passwordHasherService.HashPassword(command.Password);
 
-            var newUser = User.Create(
+            var newUser = User.RegisterNew(
                 userCode, 
                 command.Email, 
                 passwordHash, 

@@ -158,7 +158,7 @@ namespace UMS.Domain.Users
         #region Factory Method
 
         /// <summary>
-        /// Factory method to create and initialize a new <see cref="User"/> instance.
+        /// Factory method for user self-registration and initialize a new <see cref="User"/> instance.
         /// </summary>
         /// <param name="userCode">The business identifier for the user.</param>
         /// <param name="email">The user's email address.</param>
@@ -169,9 +169,9 @@ namespace UMS.Domain.Users
         /// <param name="createdByUserId">The ID of the user creating this user, for auditing.</param>
         /// <returns>A new <see cref="User"/> instance, initialized but not yet active.</returns>
         /// <remarks>
-        /// This method generates an initial activation token and raises a <see cref="UserCreatedDomainEvent"/>.
+        /// This method generates an initial activation token and raises a <see cref="UserRegisteredDomainEvent"/>.
         /// </remarks>
-        public static User Create(
+        public static User RegisterNew(
             string userCode,
             string email,
             string? passwordHash,
@@ -184,7 +184,37 @@ namespace UMS.Domain.Users
             user.SetCreationAudit(createdByUserId);
             user.GenerateActivationToken(activationTokenExpiryHours);
 
-            user.RaiseDomainEvent(new UserCreatedDomainEvent(user.Id, user.Email, user.UserCode, user.CreatedAtUtc, user.ActivationToken!));
+            user.RaiseDomainEvent(new UserRegisteredDomainEvent(user.Id, user.Email, user.UserCode, user.CreatedAtUtc, user.ActivationToken!));
+
+            return user;
+        }
+
+        /// <summary>
+        /// Factory for an administrator creating a user. Creates user without a password and initialize a new <see cref="User"/> instance.
+        /// </summary>
+        /// <param name="userCode">The business identifier for the user.</param>
+        /// <param name="email">The user's email address.</param>
+        /// <param name="firstName">The user's first name.</param>
+        /// <param name="lastName">The user's last name.</param>
+        /// <param name="activationTokenExpiryHours">The number of hours the activation token is valid for.</param>
+        /// <param name="createdByUserId">The ID of the user creating this user, for auditing.</param>
+        /// <returns>A new <see cref="User"/> instance, initialized but not yet active.</returns>
+        /// <remarks>
+        /// This method generates an initial activation token and raises a <see cref="AdminCreatedUserDomainEvent"/>.
+        /// </remarks>
+        public static User CreateByAdmin(
+            string userCode,
+            string email,
+            string? firstName,
+            string? lastName,
+            int activationTokenExpiryHours,
+            Guid? createdByUserId)
+        {
+            var user = new User(Guid.NewGuid(), userCode, email, null, firstName, lastName);
+            user.SetCreationAudit(createdByUserId);
+            user.GenerateActivationToken(activationTokenExpiryHours);
+
+            user.RaiseDomainEvent(new AdminCreatedUserDomainEvent(user.Id, user.Email, user.UserCode, user.CreatedAtUtc, user.ActivationToken!));
 
             return user;
         }

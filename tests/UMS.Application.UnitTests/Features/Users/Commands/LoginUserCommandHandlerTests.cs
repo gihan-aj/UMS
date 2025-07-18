@@ -69,7 +69,7 @@ namespace UMS.Application.UnitTests.Features.Users.Commands
             var command = new LoginUserCommand("test@example.com", "wrong-password", "device123");
 
             // Create a fake user object for the test
-            var user = User.Create("USR-20250702-00001", command.Email, "hashed-password", "test", "user", 1, null);
+            var user = User.RegisterNew("USR-20250702-00001", command.Email, "hashed-password", "test", "user", 1, null);
             user.Activate(null);
 
             // Simulate finding the user
@@ -97,7 +97,7 @@ namespace UMS.Application.UnitTests.Features.Users.Commands
             var command = new LoginUserCommand("test@example.com", "password123", "device123");
 
             // Create a user that is NOT active
-            var user = User.Create("USR-250702-00001", command.Email, "hashed-password", "Test", "User", 1, null);
+            var user = User.RegisterNew("USR-250702-00001", command.Email, "hashed-password", "Test", "User", 1, null);
             // We do NOT call user.Activate()
 
             _mockUserRepository
@@ -117,7 +117,7 @@ namespace UMS.Application.UnitTests.Features.Users.Commands
         {
             // Arrange
             var command = new LoginUserCommand("test@example.com", "password123", "device123");
-            var user = User.Create("USR-250702-00001", command.Email, "hashed-password", "Test", "User", 1, null);
+            var user = User.RegisterNew("USR-250702-00001", command.Email, "hashed-password", "Test", "User", 1, null);
             user.Activate(null);
 
             _mockUserRepository

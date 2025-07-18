@@ -13,7 +13,7 @@ namespace UMS.Application.Features.Users.EventHandlers
     /// <summary>
     /// Handles the UserCreatedDomainEvent to send an activation email.
     /// </summary>
-    public class SendActivationEmailOnUserCreatedHandler : INotificationHandler<UserCreatedDomainEvent>
+    public class SendActivationEmailOnUserCreatedHandler : INotificationHandler<UserRegisteredDomainEvent>
     {
         private readonly IEmailService _emailService;
         private readonly ClientAppSettings _clientAppSettings;
@@ -26,7 +26,7 @@ namespace UMS.Application.Features.Users.EventHandlers
             _clientAppSettings = clientAppSettings.Value;
         }
 
-        public async Task Handle(UserCreatedDomainEvent notification, CancellationToken cancellationToken)
+        public async Task Handle(UserRegisteredDomainEvent notification, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Handling UserCreatedDomainEvent for user {UserId}...", notification.UserId);
 

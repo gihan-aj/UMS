@@ -73,7 +73,7 @@ namespace UMS.Infrastructure.Persistence.Seeders
                 string userCode = await _codeGenerator.GenerateReferenceCodeAsync("USR");
                 string passwordHash = _passwordHasher.HashPassword(_adminSettings.Password);
 
-                var adminUser = User.Create(
+                var adminUser = User.RegisterNew(
                     userCode,
                     _adminSettings.Email,
                     passwordHash,

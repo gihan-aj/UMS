@@ -50,10 +50,9 @@ namespace UMS.Application.Features.Users.Commands.CreateUserByAdmin
 
             var userCode = await _referenceCodeGeneratorService.GenerateReferenceCodeAsync("USR");
 
-            var newUser = User.Create(
+            var newUser = User.CreateByAdmin(
                 userCode,
                 command.Email,
-                null,
                 command.FirstName,
                 command.LastName,
                 _tokenSettings.ActivationTokenExpiryHours,

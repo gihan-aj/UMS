@@ -20,7 +20,7 @@ namespace UMS.Domain.UnitTests.Users
         public void Create_Should_InitializeUserCorrectly()
         {
             // --- Act ---
-            var user = User.Create(
+            var user = User.RegisterNew(
                 TestUserCode,
                 TestEmail,
                 TestPasswordHash,
@@ -46,7 +46,7 @@ namespace UMS.Domain.UnitTests.Users
         public void CreateNew_Should_RaiseUserCreatedDomainEvent()
         {
             // --- Act ---
-            var user = User.Create(
+            var user = User.RegisterNew(
                 TestUserCode,
                 TestEmail,
                 TestPasswordHash,
@@ -59,9 +59,9 @@ namespace UMS.Domain.UnitTests.Users
             // Check that the correct domain event was raised
             var domainEvent = user.GetDomainEvents().FirstOrDefault();
             domainEvent.Should().NotBeNull();
-            domainEvent.Should().BeOfType<UserCreatedDomainEvent>();
+            domainEvent.Should().BeOfType<UserRegisteredDomainEvent>();
 
-            var userCreatedEvent = (UserCreatedDomainEvent)domainEvent!;
+            var userCreatedEvent = (UserRegisteredDomainEvent)domainEvent!;
             userCreatedEvent.UserId.Should().Be(user.Id);
             userCreatedEvent.Email.Should().Be(user.Email);
             userCreatedEvent.ActivationToken.Should().Be(user.ActivationToken);
@@ -71,7 +71,7 @@ namespace UMS.Domain.UnitTests.Users
         public void Activate_Should_SetActiveFlagToTrue_And_ClearActivationToken()
         {
             // --- Arrange ---
-            var user = User.Create(TestUserCode, TestEmail, TestPasswordHash, null, null,1, null);
+            var user = User.RegisterNew(TestUserCode, TestEmail, TestPasswordHash, null, null,1, null);
             user.ClearDomainEvents(); // Clear initial event for a clean test
 
             // --- Act ---
@@ -87,7 +87,7 @@ namespace UMS.Domain.UnitTests.Users
         public void Activate_Should_RaiseUserAccountActivatedDomainEvent()
         {
             // --- Arrange ---
-            var user = User.Create(TestUserCode, TestEmail, TestPasswordHash, null, null,1, null);
+            var user = User.RegisterNew(TestUserCode, TestEmail, TestPasswordHash, null, null,1, null);
             user.ClearDomainEvents();
 
             // --- Act ---
@@ -104,7 +104,7 @@ namespace UMS.Domain.UnitTests.Users
         public void AddRefreshToken_Should_AddTokenToCollection()
         {
             // --- Arrange ---
-            var user = User.Create(TestUserCode, TestEmail, TestPasswordHash, null, null,1, null);
+            var user = User.RegisterNew(TestUserCode, TestEmail, TestPasswordHash, null, null,1, null);
             var deviceId = "device-123";
             var validity = TimeSpan.FromDays(7);
 
