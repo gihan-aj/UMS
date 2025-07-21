@@ -182,6 +182,7 @@ app.UseAuthorization();
 app.MapAuthApiEndpoints();
 app.MapUserApiEndpoints();
 app.MapRoleApiEndpoints();
+app.MapPermissionEndpoints();
 
 // --- Run Database Seeder ---
 // This will run the seeder every time the application starts.
