@@ -2,5 +2,5 @@
 
 namespace UMS.WebAPI.Contracts.Requests.Roles
 {
-    public record AssignPermissionsRequest(List<short> PermissionIds);
+    public record AssignPermissionsRequest(List<string> PermissionNames);
 }

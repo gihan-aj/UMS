@@ -9,5 +9,5 @@ namespace UMS.Application.Features.Roles.Commands.AssignPermissions
     /// </summary>
     public sealed record AssignPermissionsToRoleCommand(
         byte RoleId,
-        List<short> PermissionIds) : ICommand;
+        List<string> PermissionNames) : ICommand;
 }

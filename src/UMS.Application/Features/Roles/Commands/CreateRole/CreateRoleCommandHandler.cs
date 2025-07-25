@@ -1,5 +1,6 @@
 ﻿using Mediator;
 using Microsoft.Extensions.Logging;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using UMS.Application.Abstractions.Persistence;
@@ -14,6 +15,7 @@ namespace UMS.Application.Features.Roles.Commands.CreateRole
     {
         private readonly IRoleRepository _roleRepository;
         private readonly ICurrentUserService _currentUserService;
+        private readonly IPermissionRepository _permissionRepository;
         private readonly ISequenceGeneratorService _sequenceGeneratorService;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<CreateRoleCommandHandler> _logger;
@@ -23,13 +25,15 @@ namespace UMS.Application.Features.Roles.Commands.CreateRole
             IUnitOfWork unitOfWork,
             ILogger<CreateRoleCommandHandler> logger,
             ISequenceGeneratorService sequenceGeneratorService,
-            ICurrentUserService currentUserService)
+            ICurrentUserService currentUserService,
+            IPermissionRepository permissionRepository)
         {
             _roleRepository = roleRepository;
             _unitOfWork = unitOfWork;
             _logger = logger;
             _sequenceGeneratorService = sequenceGeneratorService;
             _currentUserService = currentUserService;
+            _permissionRepository = permissionRepository;
         }
 
         public async Task<Result<byte>> Handle(CreateRoleCommand command, CancellationToken cancellationToken)
@@ -49,6 +53,19 @@ namespace UMS.Application.Features.Roles.Commands.CreateRole
             var newRoleId = await _sequenceGeneratorService.GetNextIdAsync<byte>("Roles", cancellationToken);
             var createdUserId = _currentUserService.UserId;
             var newRole = Role.Create(newRoleId, command.Name, createdUserId);
+
+            // Find valid permissions from the database based on the provided names
+            var permissions = await _permissionRepository.GetPermissionsByNameRangeAsync(command.PermissionNames, cancellationToken);
+
+            // Assign permissions
+            if (permissions.Any())
+            {
+                var rolePermissoins = permissions
+                    .Select(p => new RolePermission { RoleId = newRoleId, PermissionId = p.Id })
+                    .ToList();
+
+                await _roleRepository.AddRolePermissionsRangeAsync(rolePermissoins, cancellationToken);
+            }
 
             // 3. Add the role to the repository
             await _roleRepository.AddAsync(newRole);

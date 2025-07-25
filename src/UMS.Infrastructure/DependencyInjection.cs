@@ -110,6 +110,7 @@ namespace UMS.Infrastructure
             // Repositories using a Scoped DbContext should also be Scoped.
             services.AddScoped<IUserRepository, EfCoreUserRepository>();
             services.AddScoped<IRoleRepository, EfCoreRoleRepository>();
+            services.AddScoped<IPermissionRepository, EfCorePermissionRepository>();
 
             // --- Background Job Registration ---
             // Register the cleanup job as a hosted service

@@ -51,10 +51,11 @@ namespace UMS.WebAPI.Endpoints
 
             // POST /api/v1/roles
             roleGroup.MapPost("/", async (
-                CreateRoleCommand command,
+                CreateRoleRequest request,
                 ISender mediator,
                 CancellationToken cancellationToken) =>
             {
+                var command = new CreateRoleCommand(request.Name, request.PermissionNames);
                 var result = await mediator.Send(command, cancellationToken);
                 return result.ToHttpResult(
                     onSuccess: (roleId) => Results.CreatedAtRoute(
@@ -98,7 +99,7 @@ namespace UMS.WebAPI.Endpoints
                 ISender mediator,
                 CancellationToken cancellationToken) =>
             {
-                var command = new UpdateRoleCommand(id, request.Name);
+                var command = new UpdateRoleCommand(id, request.Name, request.PermissionNames);
                 var result = await mediator.Send(command, cancellationToken);
                 return result.ToHttpResult(onSuccess: () => Results.NoContent());
             })
@@ -119,7 +120,7 @@ namespace UMS.WebAPI.Endpoints
                 ISender mediator,
                 CancellationToken cancellationToken) =>
             {
-                var command = new AssignPermissionsToRoleCommand(id, request.PermissionIds);
+                var command = new AssignPermissionsToRoleCommand(id, request.PermissionNames);
                 var result = await mediator.Send(command, cancellationToken);
                 return result.ToHttpResult(onSuccess: () => Results.NoContent());
             })

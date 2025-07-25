@@ -13,20 +13,23 @@ namespace UMS.Application.Features.Roles.Commands.AssignPermissions
     public class AssignPermissionsToRoleCommandHandler : ICommandHandler<AssignPermissionsToRoleCommand>
     {
         private readonly IRoleRepository _roleRepository;
+        private readonly IPermissionRepository _permissionRepository;
         private readonly ICurrentUserService _currentUserService;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<AssignPermissionsToRoleCommandHandler> _logger;
 
         public AssignPermissionsToRoleCommandHandler(
-            IRoleRepository roleRepository, 
-            ICurrentUserService currentUserService, 
-            IUnitOfWork unitOfWork, 
-            ILogger<AssignPermissionsToRoleCommandHandler> logger)
+            IRoleRepository roleRepository,
+            ICurrentUserService currentUserService,
+            IUnitOfWork unitOfWork,
+            ILogger<AssignPermissionsToRoleCommandHandler> logger,
+            IPermissionRepository permissionRepository)
         {
             _roleRepository = roleRepository;
             _currentUserService = currentUserService;
             _unitOfWork = unitOfWork;
             _logger = logger;
+            _permissionRepository = permissionRepository;
         }
 
         public async Task<Result> Handle(AssignPermissionsToRoleCommand command, CancellationToken cancellationToken)
@@ -48,23 +51,26 @@ namespace UMS.Application.Features.Roles.Commands.AssignPermissions
                     ErrorType.Conflict));
             }
 
+            // Get the requested set of permissions
+            var requestedPermissions = await _permissionRepository.GetPermissionsByNameRangeAsync(command.PermissionNames, cancellationToken);
+            var requestedPermssionIds = requestedPermissions
+                .Select(permission => permission.Id)
+                .ToHashSet();
+
             // Get the current set of permission ids assigned to the role
             var currentPermissionIds = role.Permissions.Select(rp => rp.PermissionId).ToHashSet();
 
-            // Get the requested set of permission ids
-            var requestedPermssionIds = command.PermissionIds.ToHashSet();
-
             // Find permssions to add
-            var permissionsToAdd = requestedPermssionIds.Except(currentPermissionIds).ToList();
+            var permissionsIdsToAdd = requestedPermssionIds.Except(currentPermissionIds).ToList();
 
             // Find permissions to remove
-            var permissionsToRemove = currentPermissionIds.Except(requestedPermssionIds).ToList();
+            var permissionsIdsToRemove = currentPermissionIds.Except(requestedPermssionIds).ToList();
 
             // Remove old permissions
-            if(permissionsToRemove.Any())
+            if(permissionsIdsToRemove.Any())
             {
                 var rolePermissionsToRemove = role.Permissions
-                    .Where(rp => permissionsToRemove.Contains(rp.PermissionId))
+                    .Where(rp => permissionsIdsToRemove.Contains(rp.PermissionId))
                     .ToList();
 
                 _roleRepository.RemoveRolePermissionsRange(rolePermissionsToRemove);
@@ -72,11 +78,9 @@ namespace UMS.Application.Features.Roles.Commands.AssignPermissions
             }
 
             // Add new permissions
-            if (permissionsToAdd.Any())
+            if (permissionsIdsToAdd.Any())
             {
-                var existingPermissionIds = await _roleRepository.GetExistingPermissionsAsync(permissionsToAdd, cancellationToken);
-
-                var newRolePermissions = existingPermissionIds
+                var newRolePermissions = permissionsIdsToAdd
                     .Select(permissionId => new RolePermission { RoleId = command.RoleId, PermissionId = permissionId })
                     .ToList();
 

@@ -7,7 +7,7 @@ namespace UMS.Application.Features.Roles.Commands.AssignPermissions
         public AssignPermissionsToRoleCommandValidator()
         {
             RuleFor(x => x.RoleId).NotEmpty();
-            RuleFor(x => x.PermissionIds).NotNull();
+            RuleFor(x => x.PermissionNames).NotNull();
         }
     }
 }

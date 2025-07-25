@@ -12,6 +12,9 @@ namespace UMS.Application.Features.Roles.Commands.UpdateRole
             RuleFor(x => x.NewName)
                 .NotEmpty().WithMessage("New role name is required.")
                 .MaximumLength(100).WithMessage("Role name cannot exceed 100 characters.");
+
+            RuleFor(x => x.PermissionNames)
+                .NotNull();
         }
     }
 }
