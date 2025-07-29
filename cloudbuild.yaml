@@ -1,34 +1,38 @@
 steps:
-    # Step 01: Build the Docker image    
+  # Step 1: Build the Docker image
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
       - '-t'
       - 'asia-south1-docker.pkg.dev/onyx-system-prod/onyx-images/backend:$COMMIT_SHA'
       - '.'
-    id: 'Build Docker Image'
 
-    # Step 02: Push the docker image to Artifact Registry
+  # Step 2: Push the Docker image to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
       - 'asia-south1-docker.pkg.dev/onyx-system-prod/onyx-images/backend:$COMMIT_SHA'
-    id: 'Push to Artifact registry'
 
-    # Step 03: Deploy to Cloud Run
+  # Step 3: Deploy to Cloud Run, using the connection string from Secret Manager
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'gcloud'
     args:
       - 'run'
       - 'deploy'
-      - 'ums-api' # The name of the Cloud Run service
+      - 'ums-api'
       - '--image=asia-south1-docker.pkg.dev/onyx-system-prod/onyx-images/backend:$COMMIT_SHA'
       - '--region=asia-south1'
       - '--port=8080'
       - '--allow-unauthenticated'
-      - '--set-env-vars=ConnectionStrings__DefaultConnection=Server=192.168.36.151;Database=ums_db;User ID=sa;Password=sqlserverlptp;TrustServerCertificate=True'
-    id: "Deploy to Cloud Run"
+      - '--set-env-vars=ConnectionStrings__DefaultConnection=$$DB_CONNECTION_STRING' # Use the secret
+    secretEnv: ['DB_CONNECTION_STRING']
 
-# Tell Cloud Build which images to store in Artifact Registry after the build
+# This section makes the secret available to the steps above
+availableSecrets:
+  secretManager:
+  - versionName: projects/onyx-system-prod/secrets/ums-db-connection-string/versions/latest
+    env: 'DB_CONNECTION_STRING'
+
+# Tell Cloud Build which images to store
 images:
   - 'asia-south1-docker.pkg.dev/onyx-system-prod/onyx-images/backend:$COMMIT_SHA'
