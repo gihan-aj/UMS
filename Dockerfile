@@ -18,6 +18,9 @@ COPY ["src/UMS.SharedKernal/UMS.SharedKernel.csproj", "src/UMS.SharedKernal/"]
 # --- Add your test projects from the 'tests' folder here
 COPY ["tests/UMS.Application.UnitTests/UMS.Application.UnitTests.csproj", "tests/UMS.Application.UnitTests/"]
 COPY ["tests/UMS.API.IntegrationTests/UMS.API.IntegrationTests.csproj", "tests/UMS.API.IntegrationTests/"]
+COPY ["tests/UMS.Domain.UnitTests/UMS.Domain.UnitTests.csproj", "tests/UMS.Domain.UnitTests/"]
+
+# Restore all dependencies for the entire solution
 RUN dotnet restore "UMS.sln"
 
 # Copy the rest of the source code into the container
