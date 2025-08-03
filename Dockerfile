@@ -21,7 +21,7 @@ COPY src/UMS.SharedKernal/UMS.SharedKernel.csproj ./src/UMS.SharedKernal/
 COPY src/UMS.WebAPI/UMS.WebAPI.csproj ./src/UMS.WebAPI/
 
 # Copy all the project files from the 'tests' directory
-COPY tests/UMS.API.IntergrationTests/UMS.API.IntergrationTests.csproj ./tests/UMS.API.IntergrationTests/
+COPY tests/UMS.API.IntegrationTests/UMS.API.IntegrationTests.csproj ./tests/UMS.API.IntegrationTests/
 COPY tests/UMS.Application.UnitTests/UMS.Application.UnitTests.csproj ./tests/UMS.Application.UnitTests/
 COPY tests/UMS.Domain.UnitTests/UMS.Domain.UnitTests.csproj ./tests/UMS.Domain.UnitTests/
 
