@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System;
+using System.Linq;
 using System.Text;
 using UMS.Application;
 using UMS.Application.Abstractions.Services;
@@ -137,6 +138,15 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// This allows to run the seeder as a one-off task.
+if (args.Contains("--seed-database"))
+{
+    await app.UseInfrastructureServicesAsync(); // Calls the seeder
+    // After seeding, it is often best to exit.
+    Console.WriteLine("Database seeding complete. Exiting.");
+    return; // Exit the application
+}
+
 // --- Configure the HTTP request pipeline ---
 
 // IMPORTANT: Register Global Exception Handling Middleware early in the pipeline.
@@ -183,10 +193,5 @@ app.MapAuthApiEndpoints();
 app.MapUserApiEndpoints();
 app.MapRoleApiEndpoints();
 app.MapPermissionEndpoints();
-
-// --- Run Database Seeder ---
-// This will run the seeder every time the application starts.
-// For production, you might want this to be a one-off command.
-await app.UseInfrastructureServicesAsync();
 
 app.Run();
