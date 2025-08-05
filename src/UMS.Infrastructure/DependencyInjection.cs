@@ -134,7 +134,13 @@ namespace UMS.Infrastructure
         public static async Task UseInfrastructureServicesAsync(this IApplicationBuilder app)
         {
             using var scope = app.ApplicationServices.CreateScope();
-            var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
+            var services = scope.ServiceProvider;
+
+            var dbContext = services.GetRequiredService<ApplicationDbContext>();
+            // This is the programmatic equivalent of running "Update-Database".
+            await dbContext.Database.MigrateAsync();
+
+            var seeder = services.GetRequiredService<DatabaseSeeder>();
             await seeder.SeedAsync();
         }
     }
