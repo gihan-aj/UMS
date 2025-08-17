@@ -193,5 +193,6 @@ app.MapAuthApiEndpoints();
 app.MapUserApiEndpoints();
 app.MapRoleApiEndpoints();
 app.MapPermissionEndpoints();
+app.MapClientEndpoints();
 
 app.Run();

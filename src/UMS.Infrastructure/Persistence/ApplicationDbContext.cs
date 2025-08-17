@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using System.Linq;
 using System.Reflection;
 using UMS.Domain.Authorization;
+using UMS.Domain.Clients;
 using UMS.Domain.Users;
 using UMS.Infrastructure.Persistence.Entities;
 
@@ -19,6 +20,8 @@ namespace UMS.Infrastructure.Persistence
         public DbSet<User> Users { get; set; } = null!; // null-forgiving operator, EF will initialize it
 
         public DbSet<Role> Roles { get; set; } = null!;
+
+        public DbSet<Client> Clients { get; set; } = null!;
 
         // --- Other Domain Entities ---
         public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
