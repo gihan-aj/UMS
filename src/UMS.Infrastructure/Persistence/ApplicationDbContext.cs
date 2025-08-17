@@ -28,6 +28,8 @@ namespace UMS.Infrastructure.Persistence
 
         public DbSet<Permission> Permissions { get; set; } = null!;
 
+        public DbSet<ClientRedirectUri> ClientRedirectUris { get; set; } = null!;
+
         // --- Infrastructure & Sequence Entities ---
         public DbSet<ReferenceCodeSequence> ReferenceCodeSequences { get; set; } = null!;
 
