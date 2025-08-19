@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using UMS.Application.Abstractions.Persistence;
@@ -15,6 +16,13 @@ namespace UMS.Infrastructure.Persistence.Repositories
             _dbContext = dbContext;
         }
 
+        public async Task<Client?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
+        {
+            return await _dbContext.Clients
+                .Include(c => c.RedirectUris)
+                .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+        }
+        
         public async Task<Client?> GetByClientIdAsync(string clientId, CancellationToken cancellationToken)
         {
             return await _dbContext.Clients

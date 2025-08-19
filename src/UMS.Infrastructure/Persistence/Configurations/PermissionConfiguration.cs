@@ -18,8 +18,19 @@ namespace UMS.Infrastructure.Persistence.Configurations
                 .IsRequired()
                 .HasMaxLength(128);
 
-            builder.HasIndex(p => p.Name)
+            // A permission name must be unique, either globally (if ClientId is null)
+            // or within the scope of a client.
+            builder.HasIndex(p => new { p.ClientId, p.Name })
                 .IsUnique();
+
+            // --- Configure the Nullable Foreign Key Relationship ---
+            // This defines the relationship to the Client entity.
+            // Because the foreign key property (ClientId) is nullable (Guid?),
+            // EF Core understands this is an optional relationship.
+            // We don't need to specify .IsRequired(false) as it's inferred from the nullable type.
+            builder.HasOne(p => p.Client)
+                .WithMany() // Assuming Client doesn't need a direct navigation back to its Permissions
+                .HasForeignKey(p => p.ClientId);
         }
     }
 }

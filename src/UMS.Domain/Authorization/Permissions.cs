@@ -29,6 +29,15 @@ namespace UMS.Domain.Authorization
             public const string Delete = "roles:delete";
             public const string AssignPermissions = "roles:assign_permissions";
         }
+        
+        public static class Clients
+        {
+            public const string Read = "clients:read";
+            public const string Create = "clients:create";
+            public const string Update = "clients:update";
+            public const string Delete = "clients:delete";
+            public const string ManagePermissions = "clients:manage_permissions";
+        }
 
         // A helper method to  get all defined permission strings
         public static IReadOnlyList<string> GetAllPermissionValues()
