@@ -16,10 +16,24 @@ namespace UMS.Application.Abstractions.Persistence
             Guid ClientId, 
             CancellationToken cancellationToken = default);
 
-        Task<short> GetTheLastId(CancellationToken cancellationToken = default);
+        //Task<short> GetTheLastId(CancellationToken cancellationToken = default);
 
         Task AddRangeAsync(
             List<Permission> permissions, 
+            CancellationToken cancellationToken = default);
+
+        Task<List<Permission>> GetPermissionsByIdsAsync(
+            List<short> permissionIds, 
+            CancellationToken cancellationToken);
+
+        void RemoveRange(List<Permission> permissions);
+
+        Task<bool> IsAnyPermissionsInUse(
+            List<short> permissionIds, 
+            CancellationToken cancellationToken = default);
+
+        Task<List<short>> GetInUsePermissionIds(
+            List<short> permissionIds,
             CancellationToken cancellationToken = default);
     }
 }

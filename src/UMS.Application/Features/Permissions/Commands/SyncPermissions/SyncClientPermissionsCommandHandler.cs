@@ -46,19 +46,40 @@ namespace UMS.Application.Features.Permissions.Commands.SyncPermissions
             var existingPermissionNames = existingPermissions.Select(p => p.Name).ToHashSet();
             var requestedPermissionNames = command.PermissionNames.ToHashSet();
 
-            var permissionNamesToAdd = requestedPermissionNames.Except(existingPermissionNames);
-            if(permissionNamesToAdd.Any())
+            // --- Calculate permissions to ADD ---
+            var namesToAdd = requestedPermissionNames.Except(existingPermissionNames).ToList();
+            if (namesToAdd.Any())
             {
-                var lastId = await _permissionRepository.GetTheLastId(cancellationToken);
-                var permissionsToAdd = permissionNamesToAdd
-                    .Select(name => Permission.Create(++lastId, name, command.ClientId))
+                var permissionsToAdd = namesToAdd
+                    .Select(name => Permission.Create(0, name, client.Id))
                     .ToList();
-
                 await _permissionRepository.AddRangeAsync(permissionsToAdd, cancellationToken);
-                await _unitOfWork.SaveChangesAsync(cancellationToken);
-
             }
 
+            // --- Calculate permissions to REMOVE ---
+            var namesToRemove = existingPermissionNames.Except(requestedPermissionNames).ToList();
+            if (namesToRemove.Any())
+            {
+                var permissionsToRemove = existingPermissions.Where(p => namesToRemove.Contains(p.Name)).ToList();
+                var permissionIdsToRemove = permissionsToRemove.Select(p => p.Id).ToList();
+
+                // SAFETY CHECK: Ensure these permissions are not currently assigned to any roles.
+                if(await _permissionRepository.IsAnyPermissionsInUse(permissionIdsToRemove))
+                {
+                    var inUsePermissionIds = await _permissionRepository.GetInUsePermissionIds(permissionIdsToRemove, cancellationToken);
+                    var inUsePermissions = await _permissionRepository.GetPermissionsByIdsAsync(inUsePermissionIds, cancellationToken);
+                    var inUsePermissionNames = string.Join(", ", inUsePermissions.Select(p => p.Name));
+
+                    return Result.Failure(new Error(
+                        "Permission.InUse",
+                        $"Cannot remove permissions that are currently assigned to roles. Please unassign the following permissions first: {inUsePermissionNames}",
+                        ErrorType.Conflict));
+                }
+
+                _permissionRepository.RemoveRange(permissionsToRemove);
+            }
+
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
             return Result.Success();
         }
     }

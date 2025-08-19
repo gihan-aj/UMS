@@ -45,5 +45,31 @@ namespace UMS.Infrastructure.Persistence.Repositories
         {
             await _dbContext.Permissions.AddRangeAsync(permissions, cancellationToken);
         }
+
+        public async Task<List<Permission>> GetPermissionsByIdsAsync(List<short> permissionIds, CancellationToken cancellationToken)
+        {
+            return await _dbContext.Permissions
+                .Where(p => permissionIds.Contains(p.Id))
+                .ToListAsync(cancellationToken);
+        }
+
+        public void RemoveRange(List<Permission> permissions)
+        {
+            _dbContext.Permissions.RemoveRange(permissions);
+        }
+
+        public async Task<bool> IsAnyPermissionsInUse(List<short> permissionIds, CancellationToken cancellationToken = default)
+        {
+            return await _dbContext.RolePermissions.AnyAsync(rp => permissionIds.Contains(rp.PermissionId), cancellationToken);
+        }
+
+        public async Task<List<short>> GetInUsePermissionIds(List<short> permissionIds, CancellationToken cancellationToken = default)
+        {
+            return await _dbContext.RolePermissions
+                .Where(rp => permissionIds.Contains(rp.PermissionId))
+                .Select(rp => rp.PermissionId)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+        }
     }
 }

@@ -12,7 +12,7 @@ namespace UMS.Infrastructure.Persistence.Configurations
 
             // Tell EF Core that the application will provide the value for the primary key,
             // and the database should not try to generate it.
-            builder.Property(p => p.Id).ValueGeneratedNever();
+            //builder.Property(p => p.Id).ValueGeneratedNever();
 
             builder.Property(p => p.Name)
                 .IsRequired()

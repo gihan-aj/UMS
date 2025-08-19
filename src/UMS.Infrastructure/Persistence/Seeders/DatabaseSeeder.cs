@@ -106,12 +106,12 @@ namespace UMS.Infrastructure.Persistence.Seeders
                 _logger.LogInformation("Seeding {Count} new permissions...", newPermissionNames.Count);
 
                 // Start indexing from next available ID
-                short lastId = await _dbContext.Permissions.AnyAsync(cancellationToken)
-                    ? (await _dbContext.Permissions.MaxAsync(p => p.Id, cancellationToken))
-                    : (short)0;
+                //short lastId = await _dbContext.Permissions.AnyAsync(cancellationToken)
+                //    ? (await _dbContext.Permissions.MaxAsync(p => p.Id, cancellationToken))
+                //    : (short)0;
 
                 var newPermissions = newPermissionNames
-                    .Select(name => Permission.Create(++lastId, name))
+                    .Select(name => Permission.Create(0, name))
                     .ToList();
 
                 await _dbContext.Permissions.AddRangeAsync(newPermissions, cancellationToken);
