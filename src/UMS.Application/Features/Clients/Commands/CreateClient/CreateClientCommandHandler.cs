@@ -57,10 +57,7 @@ namespace UMS.Application.Features.Clients.Commands.CreateClient
             var newClient = Client.Create(request.ClientId, request.ClientName, clientSecretHash, createdUserId);
 
             // 4. Add redirect URIs
-            foreach (var uri in request.RedirectUris.Distinct())
-            {
-                newClient.AddRedirectUri(uri);
-            }
+            newClient.AddRedirectUris(request.RedirectUris);
 
             await _clientRepository.AddAsync(newClient, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);

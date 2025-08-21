@@ -3,6 +3,7 @@ using System.Threading;
 using UMS.Domain.Clients;
 using System;
 using UMS.SharedKernel;
+using System.Collections.Generic;
 
 namespace UMS.Application.Abstractions.Persistence
 {
@@ -19,5 +20,7 @@ namespace UMS.Application.Abstractions.Persistence
             int pageSize,
             string? searchTerm,
             CancellationToken cancellationToken);
+
+        void RemoveRedirectUris(List<ClientRedirectUri> uristoRemove);
     }
 }

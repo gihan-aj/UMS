@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using UMS.Application.Features.Clients.Commands.CreateClient;
+using UMS.Application.Features.Clients.Commands.UpdateClient;
 using UMS.Application.Features.Clients.Queries.GetClientById;
 using UMS.Application.Features.Clients.Queries.ListClients;
 using UMS.Application.Features.Permissions.Commands.SyncPermissions;
@@ -78,6 +79,22 @@ namespace UMS.WebAPI.Endpoints
             .WithName("GetClientById")
             .Produces<ClientDetailsResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound)
+            .MapToApiVersion(1, 0);
+
+            // PUT /api/v1/clients/{id}
+            clientGroup.MapPut("/{id:guid}", async (
+                Guid id,
+                UpdateClientRequest request,
+                ISender mediator,
+                CancellationToken cancellationToken) =>
+            {
+                var command = new UpdateClientCommand(id, request.ClientName, request.RedirectUris);
+                var result = await mediator.Send(command, cancellationToken);
+                return result.ToHttpResult(onSuccess: () => Results.NoContent());
+            })
+            .RequireAuthorization(Permissions.Clients.Update)
+            .WithName("UpdateClient")
+            .Produces(StatusCodes.Status204NoContent)
             .MapToApiVersion(1, 0);
 
             // POST /api/v1/{clientId}/permissions

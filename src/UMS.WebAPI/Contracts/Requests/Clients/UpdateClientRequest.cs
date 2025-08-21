@@ -2,5 +2,5 @@
 
 namespace UMS.WebAPI.Contracts.Requests.Clients
 {
-    public record SyncPermissionsRequest(List<string> PermissionNames);
+    public record UpdateClientRequest(string ClientName, List<string> RedirectUris);
 }

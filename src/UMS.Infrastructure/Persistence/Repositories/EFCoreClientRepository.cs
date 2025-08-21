@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -51,6 +52,11 @@ namespace UMS.Infrastructure.Persistence.Repositories
                 page, 
                 pageSize, 
                 cancellationToken);
+        }
+
+        public void RemoveRedirectUris(List<ClientRedirectUri> uristoRemove)
+        {
+            _dbContext.ClientRedirectUris.RemoveRange(uristoRemove);
         }
     }
 }

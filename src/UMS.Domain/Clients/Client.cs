@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using UMS.Domain.Primitives;
 using UMS.Domain.Users;
 
@@ -9,7 +10,7 @@ namespace UMS.Domain.Clients
     /// Represents a client application that is registered to use the UMS for authentication.
     /// This is an Aggregate Root.
     /// </summary>
-    public class Client : AggregateRoot<Guid>
+    public class Client : AggregateRoot<Guid>, ISoftDeletable
     {
         /// <summary>
         /// A unique, public identifier for the client application (e.g., "pos-system").
@@ -31,6 +32,11 @@ namespace UMS.Domain.Clients
         /// redirect back to one of these URIs.
         /// </summary>
         public ICollection<ClientRedirectUri> RedirectUris { get; private set; } = new HashSet<ClientRedirectUri>();
+
+        // ISoftDeletable Implementation
+        public bool IsDeleted { get; private set; }
+        public DateTime? DeletedAtUtc { get; private set; }
+        public Guid? DeletedBy { get; private set; }
 
         // Private constructor for EF Core
         private Client() { }
@@ -56,9 +62,33 @@ namespace UMS.Domain.Clients
             return client;
         }
 
-        public void AddRedirectUri(string redirectUri)
+        public void AddRedirectUris(List<string> uris)
         {
-            RedirectUris.Add(ClientRedirectUri.Create(redirectUri, Id));
+            foreach (var uri in uris)
+            {
+                if (!RedirectUris.Any(ru => ru.Uri.Equals(uri, StringComparison.OrdinalIgnoreCase)))
+                {
+                    RedirectUris.Add(ClientRedirectUri.Create(uri, Id));
+                }
+            }
+        }
+
+        public void Update(string newName, Guid? modifiedByUserId)
+        {
+            if (!string.IsNullOrWhiteSpace(newName))
+            {
+                ClientName = newName;
+                SetModificationAudit(modifiedByUserId);
+            }
+        }
+
+        public void MarkAsDeleted(Guid? deletedByUserId)
+        {
+            if (IsDeleted) return;
+            IsDeleted = true;
+            DeletedAtUtc = DateTime.UtcNow;
+            DeletedBy = deletedByUserId;
+            SetModificationAudit(deletedByUserId);
         }
     }
 }
