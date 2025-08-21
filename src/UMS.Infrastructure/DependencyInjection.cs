@@ -119,7 +119,7 @@ namespace UMS.Infrastructure
             services.AddScoped<IUserRepository, EfCoreUserRepository>();
             services.AddScoped<IRoleRepository, EfCoreRoleRepository>();
             services.AddScoped<IPermissionRepository, EfCorePermissionRepository>();
-            services.AddScoped<IClientRepository, EFCoreClientRepository>();
+            services.AddScoped<IClientRepository, EfCoreClientRepository>();
 
             // --- Background Job Registration ---
             // Register the cleanup job as a hosted service

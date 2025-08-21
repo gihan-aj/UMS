@@ -2,6 +2,7 @@
 using System.Threading;
 using UMS.Domain.Clients;
 using System;
+using UMS.SharedKernel;
 
 namespace UMS.Application.Abstractions.Persistence
 {
@@ -12,5 +13,11 @@ namespace UMS.Application.Abstractions.Persistence
         Task<Client?> GetByClientIdAsync(string clientId, CancellationToken cancellationToken);
 
         Task AddAsync(Client client, CancellationToken cancellationToken);
+
+        Task<PagedList<Client>> GetPagedListAsync(
+            int page,
+            int pageSize,
+            string? searchTerm,
+            CancellationToken cancellationToken);
     }
 }
