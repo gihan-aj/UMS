@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using UMS.Application.Features.Clients.Commands.CreateClient;
+using UMS.Application.Features.Clients.Commands.DeleteClient;
 using UMS.Application.Features.Clients.Commands.UpdateClient;
 using UMS.Application.Features.Clients.Queries.GetClientById;
 using UMS.Application.Features.Clients.Queries.ListClients;
@@ -97,7 +98,7 @@ namespace UMS.WebAPI.Endpoints
             .Produces(StatusCodes.Status204NoContent)
             .MapToApiVersion(1, 0);
 
-            // POST /api/v1/{clientId}/permissions
+            // PUT /api/v1/{clientId}/permissions
             clientGroup.MapPut("/{clientId:guid}/permissions", async (
                 Guid clientId,
                 SyncPermissionsRequest request,
@@ -110,6 +111,21 @@ namespace UMS.WebAPI.Endpoints
             })
             .RequireAuthorization(Permissions.Clients.ManagePermissions)
             .WithName("SyncClientPermissions")
+            .Produces(StatusCodes.Status204NoContent)
+            .MapToApiVersion(1, 0);
+
+            // DELETE /api/v1/{clientId}
+            clientGroup.MapDelete("/{id:guid}", async (
+                Guid id, 
+                ISender mediator, 
+                CancellationToken cancellationToken) =>
+            {
+                var command = new DeleteClientCommand(id);
+                var result = await mediator.Send(command, cancellationToken);
+                return result.ToHttpResult(onSuccess: () => Results.NoContent());
+            })
+            .RequireAuthorization(Permissions.Clients.Delete)
+            .WithName("DeleteClient")
             .Produces(StatusCodes.Status204NoContent)
             .MapToApiVersion(1, 0);
 

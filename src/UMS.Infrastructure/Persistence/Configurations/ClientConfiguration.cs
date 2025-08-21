@@ -29,6 +29,19 @@ namespace UMS.Infrastructure.Persistence.Configurations
                 .WithOne() // No navigation property back to Client from RedirectUri
                 .HasForeignKey(ru => ru.ClientId)
                 .OnDelete(DeleteBehavior.Cascade); // If a client is deleted, its URIs are deleted too
+
+            builder.Property(r => r.IsDeleted)
+                .IsRequired()
+                .HasDefaultValue(false);
+
+            builder.Property(r => r.DeletedAtUtc)
+                .IsRequired(false);
+
+            builder.Property(r => r.DeletedBy)
+                .IsRequired(false);
+
+            // Queries for Roles automatically filter out soft-deleted records
+            builder.HasQueryFilter(r => !r.IsDeleted);
         }
     }
 }
