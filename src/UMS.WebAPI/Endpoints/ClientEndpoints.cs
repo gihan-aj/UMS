@@ -21,7 +21,7 @@ namespace UMS.WebAPI.Endpoints
 {
     public static class ClientEndpoints
     {
-        public static IEndpointRouteBuilder MapClientEndpoints(this IEndpointRouteBuilder app)
+        public static IEndpointRouteBuilder MapClientApiEndpoints(this IEndpointRouteBuilder app)
         {
             var apiVersionSet = app.NewApiVersionSet()
                 .HasApiVersion(new ApiVersion(1, 0))

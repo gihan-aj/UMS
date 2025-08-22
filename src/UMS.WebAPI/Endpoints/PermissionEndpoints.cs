@@ -12,7 +12,7 @@ namespace UMS.WebAPI.Endpoints
 {
     public static class PermissionEndpoints
     {
-        public static IEndpointRouteBuilder MapPermissionEndpoints(this IEndpointRouteBuilder app)
+        public static IEndpointRouteBuilder MapPermissionApiEndpoints(this IEndpointRouteBuilder app)
         {
             var apiVersionSet = app.NewApiVersionSet()
                 .HasApiVersion(new Asp.Versioning.ApiVersion(1, 0))
