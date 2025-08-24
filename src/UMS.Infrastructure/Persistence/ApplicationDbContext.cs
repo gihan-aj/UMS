@@ -1,5 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Duende.IdentityServer.EntityFramework.Entities;
+using Duende.IdentityServer.EntityFramework.Extensions;
+using Duende.IdentityServer.EntityFramework.Interfaces;
+using Duende.IdentityServer.EntityFramework.Options;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.Extensions.Options;
 using System.Linq;
 using System.Reflection;
 using UMS.Domain.Authorization;
@@ -9,9 +14,10 @@ using UMS.Infrastructure.Persistence.Entities;
 
 namespace UMS.Infrastructure.Persistence
 {
-    public class ApplicationDbContext : DbContext
+    public class ApplicationDbContext : DbContext, IPersistedGrantDbContext
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) 
+        public ApplicationDbContext(
+            DbContextOptions<ApplicationDbContext> options) 
             : base(options)
         {
         }
@@ -21,14 +27,14 @@ namespace UMS.Infrastructure.Persistence
 
         public DbSet<Role> Roles { get; set; } = null!;
 
-        public DbSet<Client> Clients { get; set; } = null!;
+        public DbSet<Domain.Clients.Client> Clients { get; set; } = null!;
 
         // --- Other Domain Entities ---
         public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
 
         public DbSet<Permission> Permissions { get; set; } = null!;
 
-        public DbSet<ClientRedirectUri> ClientRedirectUris { get; set; } = null!;
+        public DbSet<Domain.Clients.ClientRedirectUri> ClientRedirectUris { get; set; } = null!;
 
         // --- Infrastructure & Sequence Entities ---
         public DbSet<ReferenceCodeSequence> ReferenceCodeSequences { get; set; } = null!;
@@ -40,9 +46,24 @@ namespace UMS.Infrastructure.Persistence
 
         public DbSet<RolePermission> RolePermissions { get; set; } = null!;
 
+        // --- IdentityServer DbSets ---
+        public DbSet<PersistedGrant> PersistedGrants { get; set; } = null!;
+
+        public DbSet<DeviceFlowCodes> DeviceFlowCodes { get; set; } = null!;
+
+        public DbSet<Key> Keys { get; set; } = null!;
+
+        public DbSet<ServerSideSession> ServerSideSessions { get; set; } = null!;
+
+        public DbSet<PushedAuthorizationRequest> PushedAuthorizationRequests { get; set; } = null!;
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // This method requires the OperationalStoreOptions, but it gets them
+            // from the DI container internally, not from our constructor.
+            modelBuilder.ConfigurePersistedGrantContext(new OperationalStoreOptions());
 
             // Apply all IEntityTypeConfiguration classes from the current assembly
             modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());

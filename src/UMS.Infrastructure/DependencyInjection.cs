@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Duende.IdentityServer.Services;
+using Duende.IdentityServer.Validation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -9,6 +11,8 @@ using System.Threading.Tasks;
 using UMS.Application.Abstractions.Persistence;
 using UMS.Application.Abstractions.Services;
 using UMS.Application.Settings;
+using UMS.Domain.Users;
+using UMS.Infrastructure.Authentication;
 using UMS.Infrastructure.Authentication.Settings;
 using UMS.Infrastructure.Authorization;
 using UMS.Infrastructure.BackgroundJobs;
@@ -127,6 +131,29 @@ namespace UMS.Infrastructure
 
             // --- Seeder Registration ---
             services.AddScoped<DatabaseSeeder>();
+
+            // --- Custom IdentityServer Services ---
+            services.AddTransient<IResourceOwnerPasswordValidator, ResourceOwnerPasswordValidator>();
+            services.AddTransient<IProfileService, ProfileService>();
+
+            // --- IdentityServer Setup ---
+            services.AddIdentityServer(options =>
+                {
+                    options.KeyManagement.Enabled = false;
+                })
+                .AddInMemoryApiResources(IdentityServerConfig.GetApiResources())
+                .AddInMemoryApiScopes(IdentityServerConfig.GetApiScopes())
+                .AddInMemoryClients(IdentityServerConfig.GetClients())
+                .AddOperationalStore(options =>
+                {
+                    options.ConfigureDbContext = b =>
+                        b.UseNpgsql(configuration.GetConnectionString("DefaultConnection"),
+                            sql => sql.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName));
+
+                })
+                .AddResourceOwnerValidator<ResourceOwnerPasswordValidator>()
+                .AddProfileService<ProfileService>()
+                .AddDeveloperSigningCredential();
 
             return services;
         }

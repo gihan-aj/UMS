@@ -40,6 +40,10 @@ namespace UMS.WebAPI.Extensions
 
             app.UseHttpsRedirection();
             app.UseCors("_myAllowSpecificOrigins");
+
+            // Add IdentityServer to the pipeline. It handles its own routing.
+            app.UseIdentityServer();
+
             app.UseAuthentication();
             app.UseAuthorization();
 
