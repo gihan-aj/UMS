@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 
@@ -30,6 +31,9 @@ namespace UMS.Infrastructure.Authorization
             if (policyName.Contains(':')) // Simple check to identify our permission format
             {
                 var policyBuilder = new AuthorizationPolicyBuilder();
+                // ...require the user to be authenticated via the JWT Bearer scheme...
+                policyBuilder.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme);
+                // ...and add our custom permission requirement.
                 policyBuilder.AddRequirements(new PermissionRequirement(policyName));
                 return policyBuilder.Build();
             }

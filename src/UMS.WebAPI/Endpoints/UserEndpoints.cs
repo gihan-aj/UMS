@@ -1,4 +1,5 @@
 ﻿using Mediator;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -49,7 +50,11 @@ namespace UMS.WebAPI.Endpoints
                 var result = await mediator.Send(query, cancellationToken);
                 return result.ToHttpResult();
             })
-                .RequireAuthorization() // This makes the endpoint protected!
+                .RequireAuthorization(policy =>
+                    {
+                        policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme);
+                        policy.RequireAuthenticatedUser();
+                    }) // This makes the endpoint protected!
                 .WithName("GetMyProfile")
                 .Produces<UserProfileResponse>(StatusCodes.Status200OK)
                 .ProducesProblem(StatusCodes.Status401Unauthorized) // If not authenticated
@@ -66,7 +71,11 @@ namespace UMS.WebAPI.Endpoints
                 var result = await mediator.Send(command, cancellationToken);
                 return result.ToHttpResult(onSuccess: () => Results.NoContent());
             })
-                .RequireAuthorization() // This makes the endpoint protected!
+                .RequireAuthorization(policy =>
+                    {
+                        policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme);
+                        policy.RequireAuthenticatedUser();
+                    }) // This makes the endpoint protected!
                 .WithName("UpdateMyProfile")
                 .Produces(StatusCodes.Status204NoContent)
                 .ProducesProblem(StatusCodes.Status400BadRequest)
@@ -86,8 +95,7 @@ namespace UMS.WebAPI.Endpoints
                 var command = new CreateUserByAdminCommand(
                     request.Email, 
                     request.FirstName, 
-                    request.LastName,
-                    request.RoleIds);
+                    request.LastName);
 
                 var result = await mediator.Send(command, cancellationToken);
                 return result.ToHttpResult(

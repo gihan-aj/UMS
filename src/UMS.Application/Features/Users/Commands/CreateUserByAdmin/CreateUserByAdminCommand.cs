@@ -14,6 +14,5 @@ namespace UMS.Application.Features.Users.Commands.CreateUserByAdmin
     public sealed record CreateUserByAdminCommand(
         string Email,
         string FirstName,
-        string LastName,
-        List<byte> RoleIds) : ICommand<Guid>;
+        string LastName) : ICommand<Guid>;
 }

@@ -15,6 +15,7 @@ namespace UMS.Application.Features.Users.Commands.CreateUserByAdmin
     public class CreateUserByAdminCommandHandler : ICommandHandler<CreateUserByAdminCommand, Guid>
     {
         private readonly IUserRepository _userRepository;
+        private readonly IRoleRepository _roleRepository;
         private readonly IReferenceCodeGeneratorService _referenceCodeGeneratorService;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ICurrentUserService _currentUserService;
@@ -27,7 +28,8 @@ namespace UMS.Application.Features.Users.Commands.CreateUserByAdmin
             IUnitOfWork unitOfWork,
             ICurrentUserService currentUserService,
             ILogger<CreateUserByAdminCommandHandler> logger,
-            IOptions<TokenSettings> tokenSettings)
+            IOptions<TokenSettings> tokenSettings,
+            IRoleRepository roleRepository)
         {
             _userRepository = userRepository;
             _referenceCodeGeneratorService = referenceCodeGeneratorService;
@@ -35,6 +37,7 @@ namespace UMS.Application.Features.Users.Commands.CreateUserByAdmin
             _currentUserService = currentUserService;
             _logger = logger;
             _tokenSettings = tokenSettings.Value;
+            _roleRepository = roleRepository;
         }
 
         public async Task<Result<Guid>> Handle(CreateUserByAdminCommand command, CancellationToken cancellationToken)
@@ -48,6 +51,17 @@ namespace UMS.Application.Features.Users.Commands.CreateUserByAdmin
                     ErrorType.Conflict));
             }
 
+            var defaultRole = await _roleRepository.GetByNameAsync("User");
+            if (defaultRole == null)
+            {
+                return Result.Failure<Guid>(new Error(
+                    "Role.NotFound", 
+                    "Default role configuration is missing.", 
+                    ErrorType.Failure));
+            }
+
+            var createdBy = _currentUserService.UserId;
+
             var userCode = await _referenceCodeGeneratorService.GenerateReferenceCodeAsync("USR");
 
             var newUser = User.CreateByAdmin(
@@ -56,12 +70,14 @@ namespace UMS.Application.Features.Users.Commands.CreateUserByAdmin
                 command.FirstName,
                 command.LastName,
                 _tokenSettings.ActivationTokenExpiryHours,
-                _currentUserService.UserId);
+                createdBy);
 
-            foreach(byte roleId in command.RoleIds)
-            {
-                newUser.AssignRole(roleId, _currentUserService.UserId ?? Guid.Empty);
-            }
+            newUser.AssignRole(defaultRole.Id, createdBy ?? Guid.Empty);
+
+            //foreach(byte roleId in command.RoleIds)
+            //{
+            //    newUser.AssignRole(roleId, _currentUserService.UserId ?? Guid.Empty);
+            //}
 
             await _userRepository.AddAsync(newUser);
             await _unitOfWork.SaveChangesAsync(cancellationToken);

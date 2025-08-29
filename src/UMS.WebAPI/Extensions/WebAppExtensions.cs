@@ -47,6 +47,8 @@ namespace UMS.WebAPI.Extensions
             app.UseAuthentication();
             app.UseAuthorization();
 
+            app.MapControllers();
+
             return app;
         }
 

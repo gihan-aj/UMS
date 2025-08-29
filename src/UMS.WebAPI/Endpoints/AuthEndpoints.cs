@@ -1,5 +1,6 @@
 ﻿using Asp.Versioning;
 using Mediator;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -105,7 +106,11 @@ namespace UMS.WebAPI.Endpoints
 
                 return Results.NoContent();
             })
-                .RequireAuthorization() // Must be logged in (with a valid access token) to log out
+                .RequireAuthorization(policy =>
+                    {
+                        policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme);
+                        policy.RequireAuthenticatedUser();
+                    }) // Must be logged in (with a valid access token) to log out
                 .WithName("LogoutUser")
                 .Produces(StatusCodes.Status204NoContent)
                 .ProducesProblem(StatusCodes.Status401Unauthorized)

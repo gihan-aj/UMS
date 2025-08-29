@@ -8,6 +8,8 @@ namespace UMS.Application.Abstractions.Persistence
 {
     public interface IPermissionRepository
     {
+        Task<List<Permission>> GetClientPermissionsAsync(CancellationToken cancellationToken = default);
+
         Task<List<Permission>> GetPermissionsByNameRangeAsync(
             List<string> permissionNames, 
             CancellationToken cancellationToken = default);

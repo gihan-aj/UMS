@@ -18,6 +18,15 @@ namespace UMS.Infrastructure.Persistence.Repositories
             _dbContext = dbContext;
         }
 
+        public async Task<List<Permission>> GetClientPermissionsAsync(CancellationToken cancellationToken = default)
+        {
+            return await _dbContext.Permissions
+                .IgnoreQueryFilters()
+                .Where(p => p.ClientId != null)
+                .Include(p => p.Client)
+                .ToListAsync(cancellationToken);
+        }
+        
         public async Task<List<Permission>> GetPermissionsByNameRangeAsync(List<string> permissionNames, CancellationToken cancellationToken = default)
         {
             return await _dbContext.Permissions

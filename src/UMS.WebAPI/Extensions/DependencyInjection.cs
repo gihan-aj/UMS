@@ -10,6 +10,7 @@ using UMS.WebAPI.Services;
 using Asp.Versioning;
 using Microsoft.OpenApi.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Identity;
 
 namespace UMS.WebAPI.Extensions
 {
@@ -23,25 +24,55 @@ namespace UMS.WebAPI.Extensions
             services.AddHttpContextAccessor();
             services.AddScoped<ICurrentUserService, CurrentUserService>();
 
+            services.AddControllersWithViews();
+
             // Configure JWT Authentication
+            //var jwtSettings = new JwtSettings();
+            //configuration.Bind(JwtSettings.SectionName, jwtSettings);
+            //services.AddAuthentication(options =>
+            //{
+            //    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            //    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            //})
+            //.AddJwtBearer(options => options.TokenValidationParameters = new TokenValidationParameters
+            //{
+            //    ValidateIssuer = true,
+            //    ValidIssuer = jwtSettings.Issuer,
+            //    ValidateAudience = true,
+            //    ValidAudience = jwtSettings.Audience,
+            //    ValidateLifetime = true,
+            //    ValidateIssuerSigningKey = true,
+            //    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret)),
+            //    ClockSkew = TimeSpan.Zero
+            //});
+
+            // --- Authentication Setup (Dual Schemes) ---
             var jwtSettings = new JwtSettings();
             configuration.Bind(JwtSettings.SectionName, jwtSettings);
-            services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
-            .AddJwtBearer(options => options.TokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidIssuer = jwtSettings.Issuer,
-                ValidateAudience = true,
-                ValidAudience = jwtSettings.Audience,
-                ValidateLifetime = true,
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret)),
-                ClockSkew = TimeSpan.Zero
-            });
+
+            // Set the default scheme to Cookie's for IdentityServer's interactive UI.
+            services.AddAuthentication(IdentityConstants.ApplicationScheme)
+                // Add the cookie handler for managing user sessions during login, logout, etc.
+                .AddCookie(IdentityConstants.ApplicationScheme, options =>
+                {
+                    // Configure cookie options if needed
+                    options.LoginPath = "/Account/Login"; // Example path to a login page
+                })
+                // Add the JWT Bearer handler for protecting APIs.
+                .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidIssuer = jwtSettings.Issuer,
+                        ValidateAudience = true,
+                        ValidAudience = jwtSettings.Audience,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret)),
+                        ClockSkew = TimeSpan.Zero
+                    };
+                });
 
             services.AddAuthorization();
 

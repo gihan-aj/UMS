@@ -46,9 +46,9 @@ namespace UMS.Infrastructure.Authentication
                     RequirePkce = true,
                     RequireClientSecret = false, // Public clients like SPAs don't use a secret
 
-                    RedirectUris = { "http://localhost:4200/auth-callback" }, // Where to redirect after login
-                    PostLogoutRedirectUris = { "http://localhost:4200" }, // Where to redirect after logout
-                    AllowedCorsOrigins = { "http://localhost:4200" },
+                    RedirectUris = { "https://localhost:4200/auth-callback" }, // Where to redirect after login
+                    PostLogoutRedirectUris = { "https://localhost:4200" }, // Where to redirect after logout
+                    AllowedCorsOrigins = { "https://localhost:4200" },
 
                     AllowedScopes =
                     {
