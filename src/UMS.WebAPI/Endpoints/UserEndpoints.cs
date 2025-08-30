@@ -14,6 +14,7 @@ using UMS.Application.Features.Users.Commands.SetRoles;
 using UMS.Application.Features.Users.Commands.UpdateMyProfile;
 using UMS.Application.Features.Users.Commands.UpdateUser;
 using UMS.Application.Features.Users.Queries.GetMyProfile;
+using UMS.Application.Features.Users.Queries.GetUserById;
 using UMS.Application.Features.Users.Queries.ListUsers;
 using UMS.Domain.Authorization;
 using UMS.SharedKernel;
@@ -128,12 +129,20 @@ namespace UMS.WebAPI.Endpoints
                 .MapToApiVersion(1, 0);
 
             // GET /api/v1/users/{id}
-            userGroup.MapGet("/{id:guid}", (Guid id /*, ApiVersion version - can be injected if needed */) =>
+            userGroup.MapGet("/{id:guid}", async (
+                Guid id,
+                ISender mediator,
+                CancellationToken cancellationToken) =>
             {
-                return Results.Ok(new { Id = id, Message = $"User details for API version would be here (placeholder)" });
+                var query = new GetUserByIdQuery(id);
+                var result = await mediator.Send(query, cancellationToken);
+                return result.ToHttpResult();
             })
-                .WithName("GetUserById") // Consider .WithName("GetUserById.V1")
-                .Produces<object>(StatusCodes.Status200OK)
+                .RequireAuthorization(Permissions.Users.Read)
+                .WithName("GetUserById")
+                .Produces<UserDetailResponse>(StatusCodes.Status200OK)
+                .ProducesProblem(StatusCodes.Status401Unauthorized)
+                .ProducesProblem(StatusCodes.Status403Forbidden)
                 .ProducesProblem(StatusCodes.Status404NotFound)
                 .MapToApiVersion(1, 0); // Explicitly map this endpoint to v1.0;
 

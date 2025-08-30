@@ -75,6 +75,16 @@ namespace UMS.Infrastructure.Persistence.Repositories
             // return await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == id);
         }
 
+        public async Task<User?> GetByIdWithRolesAndPermissionsAsync(Guid id, CancellationToken cancellationToken)
+        {
+            return await _dbContext.Users
+                .Include(u => u.UserRoles)
+                    .ThenInclude(ur => ur.Role)
+                        .ThenInclude(r => r.Permissions)
+                            .ThenInclude(rp => rp.Permission)
+                .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+        }
+
         public async Task UpdateAsync(User user)
         {
             _dbContext.Users.Update(user);

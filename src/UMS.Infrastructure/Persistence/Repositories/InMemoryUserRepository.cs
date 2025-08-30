@@ -80,6 +80,11 @@ namespace UMS.Infrastructure.Persistence.Repositories
             throw new NotImplementedException();
         }
 
+        public Task<User?> GetByIdWithRolesAndPermissionsAsync(Guid id, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<PagedList<User>> GetPagedListAsync(int page, int pageSize, string? searchTerm, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();

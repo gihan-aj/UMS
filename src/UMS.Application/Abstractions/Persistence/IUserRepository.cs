@@ -17,6 +17,8 @@ namespace UMS.Application.Abstractions.Persistence
 
         Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
 
+        Task<User?> GetByIdWithRolesAndPermissionsAsync(Guid id, CancellationToken cancellationToken);
+
         Task AddRefreshTokenAsync(RefreshToken refreshToken, CancellationToken cancellationToken);
 
         Task<User?> GetUserByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken);
