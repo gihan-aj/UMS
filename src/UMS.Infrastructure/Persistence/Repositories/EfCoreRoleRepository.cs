@@ -38,6 +38,13 @@ namespace UMS.Infrastructure.Persistence.Repositories
             return await PagedList<Role>.CreateAsync(query, page, pageSize, cancellationToken);
         }
 
+
+        public async Task<List<Role>?> GetAllAsync(CancellationToken cancellationToken)
+        {
+            return await _dbContext.Roles
+                .ToListAsync(cancellationToken);
+        } 
+
         public async Task AddAsync(Role role, CancellationToken cancellationToken = default)
         {
             await _dbContext.Roles.AddAsync(role, cancellationToken);

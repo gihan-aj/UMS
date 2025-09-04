@@ -8,6 +8,7 @@ using UMS.Application.Features.Roles.Commands.AssignPermissions;
 using UMS.Application.Features.Roles.Commands.CreateRole;
 using UMS.Application.Features.Roles.Commands.DeleteRole;
 using UMS.Application.Features.Roles.Commands.UpdateRole;
+using UMS.Application.Features.Roles.Queries.GetAllRoles;
 using UMS.Application.Features.Roles.Queries.GetRoleById;
 using UMS.Application.Features.Roles.Queries.ListQueries;
 using UMS.Domain.Authorization;
@@ -90,6 +91,20 @@ namespace UMS.WebAPI.Endpoints
                 .ProducesProblem(StatusCodes.Status401Unauthorized)
                 .ProducesProblem(StatusCodes.Status403Forbidden)
                 .ProducesProblem(StatusCodes.Status404NotFound)
+                .MapToApiVersion(1, 0);
+            
+            // GET /api/v1/roles/all
+            roleGroup.MapGet("/all", async (
+                ISender mediator,
+                CancellationToken cancellationToken) =>
+            {
+                var request = new GetAllRolesQuery();
+                var result = await mediator.Send(request, cancellationToken);
+                return result.ToHttpResult();
+            })
+                .RequireAuthorization(Permissions.Roles.Read)
+                .WithName("GetAllRoles")
+                .Produces<RoleWithPermissionsResponse>(StatusCodes.Status200OK)
                 .MapToApiVersion(1, 0);
 
             // PUT /api/v1/roles/{id}
