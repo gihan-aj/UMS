@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using UMS.Application.Features.Permissions.Queries.ListPermissions;
 
 namespace UMS.Application.Features.Users.Queries.GetUserById
 {

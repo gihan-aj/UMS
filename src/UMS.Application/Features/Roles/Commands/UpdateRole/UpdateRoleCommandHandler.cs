@@ -35,12 +35,12 @@ namespace UMS.Application.Features.Roles.Commands.UpdateRole
 
         public async Task<Result> Handle(UpdateRoleCommand command, CancellationToken cancellationToken)
         {
-            var role = await _roleRepository.GetByIdWithPermissionsAsync(command.RoleId);
+            var role = await _roleRepository.GetByIdWithPermissionsAsync(command.Id);
             if (role is null)
             {
                 return Result.Failure(new Error(
                     "Role.NotFound",
-                    $"Role with id {command.RoleId} not found.",
+                    $"Role with id {command.Id} not found.",
                     ErrorType.NotFound));
             }
 
@@ -95,14 +95,14 @@ namespace UMS.Application.Features.Roles.Commands.UpdateRole
             if (permissionsIdsToAdd.Any())
             {
                 var newRolePermissions = permissionsIdsToAdd
-                    .Select(permissionId => new RolePermission { RoleId = command.RoleId, PermissionId = permissionId })
+                    .Select(permissionId => new RolePermission { RoleId = command.Id, PermissionId = permissionId })
                     .ToList();
 
                 await _roleRepository.AddRolePermissionsRangeAsync(newRolePermissions, cancellationToken);
                 _logger.LogInformation("Adding {Count} permissions to role {RoleId}.", newRolePermissions.Count, role.Id);
             }
 
-            _logger.LogInformation("Updating role {RoleId} name to '{NewName}'.", command.RoleId, command.NewName);
+            _logger.LogInformation("Updating role {RoleId} name to '{NewName}'.", command.Id, command.NewName);
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 

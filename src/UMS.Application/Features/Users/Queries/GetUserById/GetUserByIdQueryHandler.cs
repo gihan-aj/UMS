@@ -1,14 +1,11 @@
-﻿using System.Collections.Generic;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using UMS.Application.Abstractions.Persistence;
 using UMS.Application.Common.Messaging.Queries;
-using UMS.Domain.Authorization;
-using UMS.Domain.Users;
+using UMS.Application.Features.Permissions.Queries.ListPermissions;
 using UMS.SharedKernel;
-using static UMS.Domain.Authorization.Permissions;
 
 namespace UMS.Application.Features.Users.Queries.GetUserById
 {
@@ -23,13 +20,13 @@ namespace UMS.Application.Features.Users.Queries.GetUserById
 
         public async Task<Result<UserDetailResponse>> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)
         {
-            var user = await _userRepository.GetByIdWithRolesAndPermissionsAsync(request.UserId, cancellationToken);
+            var user = await _userRepository.GetByIdWithRolesAndPermissionsAsync(request.Id, cancellationToken);
 
             if (user is null)
             {
                 return Result.Failure<UserDetailResponse>(new Error(
                     "User.NotFound",
-                    $"The user with ID {request.UserId} was not found.",
+                    $"The user with ID {request.Id} was not found.",
                     ErrorType.NotFound));
             }
 
@@ -43,7 +40,7 @@ namespace UMS.Application.Features.Users.Queries.GetUserById
                 .SelectMany(ur => ur.Role.Permissions.Select(rp => rp.Permission))
                 .Distinct()
                 .Select(p => new PermissionDetailResponse(p.Name, GenerateDescription(p.Name)))
-                .OrderBy(p => p.PermissionName)
+                .OrderBy(p => p.Name)
                 .ToList();
 
             var response = new UserDetailResponse(

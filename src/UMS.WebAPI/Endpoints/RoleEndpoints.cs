@@ -104,7 +104,7 @@ namespace UMS.WebAPI.Endpoints
             })
                 .RequireAuthorization(Permissions.Roles.Read)
                 .WithName("GetAllRoles")
-                .Produces<RoleWithPermissionsResponse>(StatusCodes.Status200OK)
+                .Produces<RoleWithDetailedPermissionsResponse>(StatusCodes.Status200OK)
                 .MapToApiVersion(1, 0);
 
             // PUT /api/v1/roles/{id}

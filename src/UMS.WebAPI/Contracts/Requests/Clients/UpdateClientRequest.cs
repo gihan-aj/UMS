@@ -2,5 +2,5 @@
 
 namespace UMS.WebAPI.Contracts.Requests.Clients
 {
-    public record UpdateClientRequest(string ClientName, List<string> RedirectUris);
+    public record UpdateClientRequest(string Name, List<string> RedirectUris);
 }

@@ -6,7 +6,7 @@ namespace UMS.Application.Features.Roles.Commands.UpdateRole
     {
         public UpdateRoleCommandValidator() 
         {
-            RuleFor(x => x.RoleId)
+            RuleFor(x => x.Id)
                 .NotEmpty().WithMessage("Role ID is required.");
 
             RuleFor(x => x.NewName)

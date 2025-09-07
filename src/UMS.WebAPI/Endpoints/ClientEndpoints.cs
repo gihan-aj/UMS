@@ -89,7 +89,7 @@ namespace UMS.WebAPI.Endpoints
                 ISender mediator,
                 CancellationToken cancellationToken) =>
             {
-                var command = new UpdateClientCommand(id, request.ClientName, request.RedirectUris);
+                var command = new UpdateClientCommand(id, request.Name, request.RedirectUris);
                 var result = await mediator.Send(command, cancellationToken);
                 return result.ToHttpResult(onSuccess: () => Results.NoContent());
             })

@@ -42,6 +42,8 @@ namespace UMS.Infrastructure.Persistence.Repositories
         public async Task<List<Role>?> GetAllAsync(CancellationToken cancellationToken)
         {
             return await _dbContext.Roles
+                .Include(r => r.Permissions)
+                .ThenInclude(rp => rp.Permission)
                 .ToListAsync(cancellationToken);
         } 
 

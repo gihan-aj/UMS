@@ -4,6 +4,6 @@
     /// Represents a role assigned to the user.
     /// </summary>
     public sealed record AssignedRoleResponse(
-        byte RoleId,
-        string RoleName);
+        byte Id,
+        string Name);
 }

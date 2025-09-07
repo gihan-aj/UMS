@@ -29,7 +29,7 @@ namespace UMS.Application.Features.Permissions.Queries.ListPermissions
                 .GroupBy(p => p.Split(":")[0])
                 .Select(g => new PermissionGroupResponse(
                     GroupName: $"System: {CultureInfo.CurrentCulture.TextInfo.ToTitleCase(g.Key)}",
-                    Permissions: g.Select(p => new PermissionDetailsResponse(p, GenerateDescription(p))).ToList()
+                    Permissions: g.Select(p => new PermissionDetailResponse(p, GenerateDescription(p))).ToList()
                 ))
                 .ToList();
 
@@ -56,7 +56,7 @@ namespace UMS.Application.Features.Permissions.Queries.ListPermissions
                         .GroupBy(p => p.PermissionName.Split(':')[0]) // e.g., "orders", "refunds"
                         .Select(resourceGroup => new PermissionGroupResponse(
                             GroupName: $"{clientGroup.Key}: {CultureInfo.CurrentCulture.TextInfo.ToTitleCase(resourceGroup.Key)}", // e.g., "POS System: Orders"
-                            Permissions: resourceGroup.Select(p => new PermissionDetailsResponse(p.PermissionName, GenerateDescription(p.PermissionName))).ToList()
+                            Permissions: resourceGroup.Select(p => new PermissionDetailResponse(p.PermissionName, GenerateDescription(p.PermissionName))).ToList()
                         ));
                 })
                 .ToList();
