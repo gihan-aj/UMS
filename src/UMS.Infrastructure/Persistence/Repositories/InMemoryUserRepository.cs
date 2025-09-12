@@ -95,6 +95,11 @@ namespace UMS.Infrastructure.Persistence.Repositories
             throw new NotImplementedException();
         }
 
+        public Task<PagedList<User>> ListAsync(PaginationQuery query, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
         public void RemoveUserRolesRange(List<UserRole> userRoles)
         {
             throw new NotImplementedException();

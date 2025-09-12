@@ -7,8 +7,10 @@ namespace UMS.Application.Features.Users.Queries.ListUsers
     /// <summary>
     /// Query to get a paginated list of all users.
     /// </summary>
+    //public sealed record ListUsersQuery(
+    //    int Page,
+    //    int PageSize,
+    //    string? SerchTerm) : IQuery<PagedList<UserProfileResponse>>;
     public sealed record ListUsersQuery(
-        int Page,
-        int PageSize,
-        string? SerchTerm) : IQuery<PagedList<UserProfileResponse>>;
+        PaginationQuery Query) : IQuery<PagedList<UserProfileResponse>>;
 }

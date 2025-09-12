@@ -31,6 +31,8 @@ namespace UMS.Application.Abstractions.Persistence
             string? searchTerm,
             CancellationToken cancellationToken);
 
+        Task<PagedList<User>> ListAsync(PaginationQuery query, CancellationToken cancellationToken = default);
+
         void RemoveUserRolesRange(List<UserRole> userRoles);
 
         Task AddUserRolesRangeAsync(List<UserRole> userRoles, CancellationToken cancellationToken = default);

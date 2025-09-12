@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Dynamic.Core;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using UMS.Application.Abstractions.Persistence;
@@ -58,6 +60,7 @@ namespace UMS.Infrastructure.Persistence.Repositories
             return await _dbContext.Users
                 .Include(u => u.RefreshTokens)
                 .Include(u => u.UserRoles)
+                .AsSplitQuery() // Improves performance
                 .FirstOrDefaultAsync(u => u.Email.ToLower() == lowerEmail);
         }
 
@@ -68,6 +71,7 @@ namespace UMS.Infrastructure.Persistence.Repositories
                 .Include(u => u.RefreshTokens)
                 .Include(u => u.UserRoles)
                     .ThenInclude(ur => ur.Role)
+                .AsSplitQuery()
                 .FirstOrDefaultAsync(u => u.Id == id, cancellationToken); 
             // FindAsync respects query filters if the entity is not already tracked.
             // If tracked and soft-deleted, it might return it.
@@ -137,6 +141,33 @@ namespace UMS.Infrastructure.Persistence.Repositories
             return await PagedList<User>.CreateAsync(query, page, pageSize, cancellationToken);
         }
 
+        public async Task<PagedList<User>> ListAsync(PaginationQuery query, CancellationToken cancellationToken = default)
+        {
+            IQueryable<User> usersQuery = _dbContext.Users.AsQueryable();
+
+            // Apply Filters
+            if(query.Filters != null && query.Filters.Any())
+            {
+                usersQuery = ApplyFilters(usersQuery, query.Filters);
+            }
+
+            // Apply Sorting
+            if (!string.IsNullOrWhiteSpace(query.SortColumn))
+            {
+                // Note: The property names must match the User entity's property names.
+                // For security, the sortColumn can be validated against a list of allowed columns.
+                var sortOrder = query.SortOrder?.ToLower() == "desc" ? "descending" : "ascending";
+                usersQuery = usersQuery.OrderBy($"{query.SortColumn} {sortOrder}");
+            }
+            else
+            {
+                // Default sort order
+                usersQuery = usersQuery.OrderBy(u => u.FirstName);
+            }
+
+            return await PagedList<User>.CreateAsync(usersQuery, query.Page, query.PageSize, cancellationToken);
+        }
+
         public void RemoveUserRolesRange(List<UserRole> userRoles)
         {
             _dbContext.UserRoles.RemoveRange(userRoles);
@@ -145,6 +176,88 @@ namespace UMS.Infrastructure.Persistence.Repositories
         public async Task AddUserRolesRangeAsync(List<UserRole> userRoles, CancellationToken cancellationToken = default)
         {
             await _dbContext.UserRoles.AddRangeAsync(userRoles, cancellationToken);
+        }
+
+        private IQueryable<User> ApplyFilters(IQueryable<User> query, List<Filter> filters)
+        {
+            if (filters == null || !filters.Any())
+            {
+                return query;
+            }
+
+            var whereClause = new StringBuilder();
+            var parameters = new List<object>();
+            var paramIndex = 0;
+
+            foreach (var filter in filters)
+            {
+                if (string.IsNullOrWhiteSpace(filter.ColumnName) || string.IsNullOrWhiteSpace(filter.Value))
+                {
+                    continue;
+                }
+
+                if( whereClause.Length > 0)
+                {
+                    whereClause.Append(" AND ");
+                }
+
+                // Again, for security, validate ColumnName against allowed properties.
+                string propertyName = filter.ColumnName;
+                string value = filter.Value;
+
+                switch (filter.Operator?.ToLower())
+                {
+                    case "contains":
+                        whereClause.Append($"{propertyName}.ToLower().Contains(@{paramIndex})");
+                        parameters.Add(value.ToLower());
+                        break;
+
+                    case "equals":
+                        whereClause.Append($"{propertyName} == @{paramIndex}");
+                        parameters.Add(value); // Needs conversion for non-string types
+                        break;
+
+                    case "notequals":
+                        whereClause.Append($"{propertyName} != @{paramIndex}");
+                        parameters.Add(value);
+                        break;
+
+                    case "gt": // Greater Than
+                        whereClause.Append($"{propertyName} > @{paramIndex}");
+                        parameters.Add(value);
+                        break;
+
+                    case "gte": // Greater Than or Equal To
+                        whereClause.Append($"{propertyName} >= @{paramIndex}");
+                        parameters.Add(value);
+                        break;
+
+                    case "lt": // Less Than
+                        whereClause.Append($"{propertyName} < @{paramIndex}");
+                        parameters.Add(value);
+                        break;
+
+                    case "lte": // Less Than or Equal To
+                        whereClause.Append($"{propertyName} <= @{paramIndex}");
+                        parameters.Add(value);
+                        break;
+
+                    default:
+                        // Default to contains for safety
+                        whereClause.Append($"{propertyName}.ToLower().Contains(@{paramIndex})");
+                        parameters.Add(value.ToLower());
+                        break;
+                }
+
+                paramIndex++;
+            }
+
+            if(whereClause.Length > 0)
+            {
+                return query.Where(whereClause.ToString(), parameters.ToArray());
+            }
+
+            return query;
         }
     }
 }

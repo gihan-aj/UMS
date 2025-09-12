@@ -20,10 +20,14 @@ namespace UMS.Application.Features.Users.Queries.ListUsers
 
         public async Task<Result<PagedList<UserProfileResponse>>> Handle(ListUsersQuery request, CancellationToken cancellationToken)
         {
-            var pagedUserList = await _userRepository.GetPagedListAsync(
-                request.Page, 
-                request.PageSize, 
-                request.SerchTerm, 
+            //var pagedUserList = await _userRepository.GetPagedListAsync(
+            //    request.Page, 
+            //    request.PageSize, 
+            //    request.SerchTerm, 
+            //    cancellationToken);
+            
+            var pagedUserList = await _userRepository.ListAsync(
+                request.Query, 
                 cancellationToken);
 
             // Mapping from the paginated domain entity (User) to the paginated DTO (UserProfileResponse)

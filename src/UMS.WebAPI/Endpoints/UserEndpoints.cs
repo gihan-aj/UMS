@@ -29,7 +29,7 @@ namespace UMS.WebAPI.Endpoints
         {
             // Define an API version set for this group of endpoints
             var apiVersionSet = app.NewApiVersionSet()
-                .HasApiVersion(new Asp.Versioning.ApiVersion(1,0))
+                .HasApiVersion(new Asp.Versioning.ApiVersion(1, 0))
                 // .HasApiVersion(new ApiVersion(2, 0)) // If you add a v2 later
                 .ReportApiVersions()
                 .Build();
@@ -45,7 +45,7 @@ namespace UMS.WebAPI.Endpoints
             // GET /api/v1/users/me
             userGroup.MapGet("/me", async (
                 ISender mediator,
-                CancellationToken cancellationToken) => 
+                CancellationToken cancellationToken) =>
             {
                 var query = new GetMyProfileQuery();
                 var result = await mediator.Send(query, cancellationToken);
@@ -61,12 +61,12 @@ namespace UMS.WebAPI.Endpoints
                 .ProducesProblem(StatusCodes.Status401Unauthorized) // If not authenticated
                 .ProducesProblem(StatusCodes.Status404NotFound)   // If user from token not found in DB
                 .MapToApiVersion(1, 0);
-            
+
             // PUT /api/v1/users/me
             userGroup.MapPut("/me", async (
                 UpdateUserRequest request,
                 ISender mediator,
-                CancellationToken cancellationToken) => 
+                CancellationToken cancellationToken) =>
             {
                 var command = new UpdateMyProfileCommand(request.FirstName, request.LastName);
                 var result = await mediator.Send(command, cancellationToken);
@@ -94,8 +94,8 @@ namespace UMS.WebAPI.Endpoints
                 ) =>
             {
                 var command = new CreateUserByAdminCommand(
-                    request.Email, 
-                    request.FirstName, 
+                    request.Email,
+                    request.FirstName,
                     request.LastName);
 
                 var result = await mediator.Send(command, cancellationToken);
@@ -106,19 +106,35 @@ namespace UMS.WebAPI.Endpoints
                 .WithName("CreateUserByAdmin")
                 .Produces<Guid>(StatusCodes.Status201Created)
                 .ProducesProblem(StatusCodes.Status400BadRequest)
-                .ProducesProblem(StatusCodes.Status404NotFound)   
+                .ProducesProblem(StatusCodes.Status404NotFound)
                 .MapToApiVersion(1, 0);
 
             // GET /api/v1/users
-            userGroup.MapGet("/", async (  
+            //userGroup.MapGet("/", async (  
+            //    ISender mediator,
+            //    CancellationToken cancellationToken,
+            //    [FromQuery] int page = 1,
+            //    [FromQuery] int pageSize = 10,
+            //    [FromQuery] string? searchTerm = null) =>
+            //{
+            //    var query = new ListUsersQuery(page, pageSize, searchTerm);
+            //    var result = await mediator.Send(query, cancellationToken);
+            //    return result.ToHttpResult();
+            //})
+            //    .RequireAuthorization(Permissions.Users.Read)
+            //    .WithName("ListUsers")
+            //    .Produces<PagedList<UserProfileResponse>>(StatusCodes.Status200OK)
+            //    .ProducesProblem(StatusCodes.Status401Unauthorized) // Not authenticated
+            //    .ProducesProblem(StatusCodes.Status403Forbidden)   // Authenticated but lacks permission
+            //    .MapToApiVersion(1, 0); 
+
+            userGroup.MapPost("/list", async(
                 ISender mediator,
-                CancellationToken cancellationToken,
-                [FromQuery] int page = 1,
-                [FromQuery] int pageSize = 10,
-                [FromQuery] string? searchTerm = null) =>
+                [FromBody] PaginationQuery query,
+                CancellationToken cancellationToken) =>
             {
-                var query = new ListUsersQuery(page, pageSize, searchTerm);
-                var result = await mediator.Send(query, cancellationToken);
+                var request = new ListUsersQuery(query);
+                var result = await mediator.Send(request, cancellationToken);
                 return result.ToHttpResult();
             })
                 .RequireAuthorization(Permissions.Users.Read)
