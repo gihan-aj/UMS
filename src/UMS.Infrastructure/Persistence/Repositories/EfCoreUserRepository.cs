@@ -198,7 +198,7 @@ namespace UMS.Infrastructure.Persistence.Repositories
 
                 if( whereClause.Length > 0)
                 {
-                    whereClause.Append(" AND ");
+                    whereClause.Append(" OR ");
                 }
 
                 // Again, for security, validate ColumnName against allowed properties.
