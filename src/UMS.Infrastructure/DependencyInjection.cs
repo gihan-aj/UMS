@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 using UMS.Application.Abstractions.Persistence;
@@ -156,18 +157,34 @@ namespace UMS.Infrastructure
             return services;
         }
 
-        // Extension method to run the seeder
+        // Extension method to run the seeder and save changes in a single transaction
         public static async Task UseInfrastructureServicesAsync(this IApplicationBuilder app)
         {
             using var scope = app.ApplicationServices.CreateScope();
             var services = scope.ServiceProvider;
-
+            var logger = services.GetRequiredService<ILogger<ApplicationDbContext>>();
             var dbContext = services.GetRequiredService<ApplicationDbContext>();
-            // This is the programmatic equivalent of running "Update-Database".
-            await dbContext.Database.MigrateAsync();
-
             var seeder = services.GetRequiredService<DatabaseSeeder>();
-            await seeder.SeedAsync();
+            var unitOfWork = services.GetRequiredService<IUnitOfWork>();
+
+            try
+            {
+                logger.LogInformation("Starting database migration...");
+                await dbContext.Database.MigrateAsync();
+                logger.LogInformation("Database migration completed.");
+
+                logger.LogInformation("Starting database seeding process...");
+                await seeder.SeedAsync();
+
+                // The seeder only adds to the change tracker. This is the single commit point.
+                await unitOfWork.SaveChangesAsync();
+                logger.LogInformation("Database seeding completed successfully.");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "An error occurred during database migration or seeding.");
+                throw;
+            }
         }
     }
 }

@@ -11,6 +11,15 @@ namespace UMS.Domain.Authorization
     public static class Permissions
     {
         // Grouping permissions by feature
+
+        public static class Profile
+        {
+            public const string Read = "profile:read";
+            public const string Update = "profile:update";
+            public const string ChangePassword = "profile:change_password";
+            public const string ChangeEmail = "profile:change_email";
+        }
+
         public static class Users
         {
             public const string Read = "users:read";
