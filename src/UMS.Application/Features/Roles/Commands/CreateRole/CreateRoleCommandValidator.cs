@@ -8,7 +8,10 @@ namespace UMS.Application.Features.Roles.Commands.CreateRole
         {
             RuleFor(x => x.Name)
                 .NotEmpty().WithMessage("Role name is required.")
-                .MaximumLength(100).WithMessage("Role name cannot exceed 100 characters.");
+                .MaximumLength(100).WithMessage("Role name cannot exceed 40 characters.");
+            
+            RuleFor(x => x.Description)
+                .MaximumLength(100).WithMessage("Role description cannot exceed 100 characters.");
 
             RuleFor(x => x.PermissionNames)
                 .NotNull();

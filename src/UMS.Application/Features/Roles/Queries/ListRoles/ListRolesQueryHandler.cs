@@ -23,7 +23,7 @@ namespace UMS.Application.Features.Roles.Queries.ListRoles
                 cancellationToken);
 
             var roleResponse = pagedRolesList.Items
-                .Select(r => new RoleResponse(r.Id, r.Name))
+                .Select(r => new RoleResponse(r.Id, r.Name, r.Description))
                 .ToList();
 
             var pagedResponse = new PagedList<RoleResponse>(

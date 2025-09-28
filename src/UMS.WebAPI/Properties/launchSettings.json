@@ -12,6 +12,7 @@
     },
     "https": {
       "commandName": "Project",
+      "commandLineArgs": "--seed-database",
       "launchBrowser": true,
       "launchUrl": "swagger",
       "environmentVariables": {

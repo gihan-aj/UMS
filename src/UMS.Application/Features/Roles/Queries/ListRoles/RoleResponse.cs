@@ -5,5 +5,6 @@
     /// </summary>
     public sealed record RoleResponse(
         byte Id,
-        string Name);
+        string Name,
+        string? Description);
 }

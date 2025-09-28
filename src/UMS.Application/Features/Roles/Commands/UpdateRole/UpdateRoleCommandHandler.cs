@@ -63,7 +63,7 @@ namespace UMS.Application.Features.Roles.Commands.UpdateRole
                 return Result.Failure(new Error("Role.CannotUpdateSystemRole", $"System role '{role.Name}' cannot be updated.", ErrorType.Conflict));
             }
 
-            role.UpdateName(command.NewName, _currentUserService.UserId);
+            role.Update(command.NewName, command.Description, _currentUserService.UserId);
 
             // Get the requested set of permissions
             var requestedPermissions = await _permissionRepository.GetPermissionsByNameRangeAsync(command.PermissionNames, cancellationToken);
@@ -72,7 +72,7 @@ namespace UMS.Application.Features.Roles.Commands.UpdateRole
                 .ToHashSet();
 
             // Get the current set of permission ids assigned to the role
-            var currentPermissionIds = role.Permissions.Select(rp => rp.PermissionId).ToHashSet();
+            var currentPermissionIds = role.RolePermissions.Select(rp => rp.PermissionId).ToHashSet();
 
             // Find permssions to add
             var permissionsIdsToAdd = requestedPermssionIds.Except(currentPermissionIds).ToList();
@@ -83,7 +83,7 @@ namespace UMS.Application.Features.Roles.Commands.UpdateRole
             // Remove old permissions
             if (permissionsIdsToRemove.Any())
             {
-                var rolePermissionsToRemove = role.Permissions
+                var rolePermissionsToRemove = role.RolePermissions
                     .Where(rp => permissionsIdsToRemove.Contains(rp.PermissionId))
                     .ToList();
 

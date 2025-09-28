@@ -64,8 +64,15 @@ namespace UMS.Infrastructure.Persistence.Seeders
             if (newPermissionNames.Any())
             {
                 _logger.LogInformation("Seeding {Count} new permissions...", newPermissionNames.Count);
-                var newPermissions = newPermissionNames.Select(name => Permission.Create(0,name)).ToList();
-                await _dbContext.Permissions.AddRangeAsync(newPermissions, cancellationToken);
+
+                foreach (var name in newPermissionNames)
+                {
+                    short newPermissionId = await _sequenceGenerator.GetNextIdAsync<short>("Permissions", cancellationToken);
+                    var newPermission = Permission.Create(newPermissionId, name);
+                    await _dbContext.Permissions.AddAsync(newPermission);
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                }
+
             }
             else
             {
@@ -94,7 +101,7 @@ namespace UMS.Infrastructure.Persistence.Seeders
         private async Task SeedRoleAsync(string roleName, List<Permission> desiredPermissions, CancellationToken cancellationToken)
         {
             var existingRole = await _dbContext.Roles
-                .Include(r => r.Permissions)
+                .Include(r => r.RolePermissions)
                 .ThenInclude(rp => rp.Permission)
                 .FirstOrDefaultAsync(r => r.Name == roleName, cancellationToken);
 
@@ -102,22 +109,23 @@ namespace UMS.Infrastructure.Persistence.Seeders
             {
                 _logger.LogInformation("Creating '{RoleName}' role...", roleName);
                 byte newRoleId = await _sequenceGenerator.GetNextIdAsync<byte>("Roles", cancellationToken);
-                var newRole = Role.Create(newRoleId, roleName, Guid.Empty); // System created
+                var newRole = Role.Create(newRoleId, roleName, null, Guid.Empty); // System created
 
                 foreach (var permission in desiredPermissions)
                 {
                     _dbContext.RolePermissions.Add(new RolePermission { RoleId = newRole.Id, PermissionId = permission.Id });
                 }
                 await _dbContext.Roles.AddAsync(newRole, cancellationToken);
+                await _dbContext.SaveChangesAsync(cancellationToken);
             }
             else
             {
                 // Role exists, so sync its permissions
-                var currentPermissionIds = existingRole.Permissions.Select(rp => rp.PermissionId).ToHashSet();
+                var currentPermissionIds = existingRole.RolePermissions.Select(rp => rp.PermissionId).ToHashSet();
                 var desiredPermissionIds = desiredPermissions.Select(p => p.Id).ToHashSet();
 
                 var permissionsToAdd = desiredPermissions.Where(p => !currentPermissionIds.Contains(p.Id)).ToList();
-                var permissionsToRemove = existingRole.Permissions.Where(rp => !desiredPermissionIds.Contains(rp.PermissionId)).ToList();
+                var permissionsToRemove = existingRole.RolePermissions.Where(rp => !desiredPermissionIds.Contains(rp.PermissionId)).ToList();
 
                 if (permissionsToAdd.Any())
                 {
@@ -125,7 +133,7 @@ namespace UMS.Infrastructure.Persistence.Seeders
                     foreach (var permission in permissionsToAdd)
                     {
                         _dbContext.RolePermissions.Add(new RolePermission { RoleId = existingRole.Id, PermissionId = permission.Id });
-                    }
+                    }  
                 }
 
                 if (permissionsToRemove.Any())
@@ -137,6 +145,10 @@ namespace UMS.Infrastructure.Persistence.Seeders
                 if (!permissionsToAdd.Any() && !permissionsToRemove.Any())
                 {
                     _logger.LogInformation("'{RoleName}' role permissions are already up-to-date.", roleName);
+                }
+                else
+                {
+                    await _dbContext.SaveChangesAsync(cancellationToken);
                 }
             }
         }

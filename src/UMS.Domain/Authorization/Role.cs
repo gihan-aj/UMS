@@ -13,8 +13,10 @@ namespace UMS.Domain.Authorization
     {
         public string Name { get; private set; } = string.Empty;
 
+        public string? Description { get; private set; } = string.Empty;
+
         // Navigation to the join table for permission
-        public ICollection<RolePermission> Permissions { get; private set; } = new HashSet<RolePermission>();
+        public ICollection<RolePermission> RolePermissions { get; private set; } = new HashSet<RolePermission>();
 
         // --- ISoftDeletable Implementation ---
         public bool IsDeleted { get; private set; }
@@ -25,21 +27,22 @@ namespace UMS.Domain.Authorization
 
         private Role() { }
 
-        public static Role Create(byte id, string name, Guid? createdByUserId)
+        public static Role Create(byte id, string name, string? description, Guid? createdByUserId)
         {
-            var newRole = new Role { Id = id, Name = name };
+            var newRole = new Role { Id = id, Name = name, Description = description };
             newRole.SetCreationAudit(createdByUserId);
 
             return newRole;
         }
 
-        public void UpdateName(string newName, Guid? modifiedByUserId)
+        public void Update(string newName, string? description, Guid? modifiedByUserId)
         {
             if (string.IsNullOrWhiteSpace(newName) || newName.Equals(Name, StringComparison.OrdinalIgnoreCase))
             {
                 return;
             }
             Name = newName;
+            Description = description;
             SetModificationAudit(modifiedByUserId);
         }
 

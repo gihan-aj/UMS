@@ -79,7 +79,7 @@ namespace UMS.Application.UnitTests.Features.Users.Commands
 
             // Simulate the password verification failing
             _mockPasswordHasherService
-                .Setup(p => p.VerifyPassword(command.Password, user.PasswordHash))
+                .Setup(p => p.VerifyPassword(command.Password, user.PasswordHash!))
                 .Returns(false);
 
             // Act
@@ -125,7 +125,7 @@ namespace UMS.Application.UnitTests.Features.Users.Commands
                 .ReturnsAsync(user);
 
             _mockPasswordHasherService
-                .Setup(p => p.VerifyPassword(command.Password, user.PasswordHash))
+                .Setup(p => p.VerifyPassword(command.Password, user.PasswordHash!))
                 .Returns(true);
 
             // Simulate token generation

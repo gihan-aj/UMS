@@ -31,7 +31,7 @@ namespace UMS.WebAPI.Endpoints
                 .WithTags("Roles")
                 .WithApiVersionSet(apiVersionSet);
 
-            // GET /api/v1/roles
+            // GET /api/v1/roles/list
             roleGroup.MapPost("/list", async (
                 ISender mediator,
                 [FromBody] PaginationQuery query,
@@ -54,7 +54,7 @@ namespace UMS.WebAPI.Endpoints
                 ISender mediator,
                 CancellationToken cancellationToken) =>
             {
-                var command = new CreateRoleCommand(request.Name, request.PermissionNames);
+                var command = new CreateRoleCommand(request.Name, request.Description, request.PermissionNames);
                 var result = await mediator.Send(command, cancellationToken);
                 return result.ToHttpResult(
                     onSuccess: (roleId) => Results.CreatedAtRoute(
@@ -112,7 +112,7 @@ namespace UMS.WebAPI.Endpoints
                 ISender mediator,
                 CancellationToken cancellationToken) =>
             {
-                var command = new UpdateRoleCommand(id, request.Name, request.PermissionNames);
+                var command = new UpdateRoleCommand(id, request.Name, request.Description, request.PermissionNames);
                 var result = await mediator.Send(command, cancellationToken);
                 return result.ToHttpResult(onSuccess: () => Results.NoContent());
             })

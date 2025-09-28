@@ -85,7 +85,7 @@ namespace UMS.Infrastructure.Persistence.Repositories
             return await _dbContext.Users
                 .Include(u => u.UserRoles)
                     .ThenInclude(ur => ur.Role)
-                        .ThenInclude(r => r.Permissions)
+                        .ThenInclude(r => r.RolePermissions)
                             .ThenInclude(rp => rp.Permission)
                 .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
         }

@@ -66,7 +66,7 @@ namespace UMS.Infrastructure.Persistence.Repositories
         public async Task<List<Role>?> GetAllAsync(CancellationToken cancellationToken)
         {
             return await _dbContext.Roles
-                .Include(r => r.Permissions)
+                .Include(r => r.RolePermissions)
                 .ThenInclude(rp => rp.Permission)
                 .ToListAsync(cancellationToken);
         } 
@@ -85,7 +85,7 @@ namespace UMS.Infrastructure.Persistence.Repositories
         {
             // Eagerly load the RolePermissions join entity, and then the associated Permission entity
             return await _dbContext.Roles
-                .Include(r => r.Permissions)
+                .Include(r => r.RolePermissions)
                     .ThenInclude(rp => rp.Permission)
                 .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
         }

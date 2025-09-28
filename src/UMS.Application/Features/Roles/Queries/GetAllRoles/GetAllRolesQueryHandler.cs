@@ -31,8 +31,8 @@ namespace UMS.Application.Features.Roles.Queries.GetAllRoles
                 return roles
                     .Select(r => 
                     new RoleWithDetailedPermissionsResponse(
-                        r.Id, r.Name, 
-                        r.Permissions.Select(rp => 
+                        r.Id, r.Name, r.Description,
+                        r.RolePermissions.Select(rp => 
                         new PermissionDetailResponse( 
                             rp.Permission.Name,
                             GenerateDescription(rp.Permission.Name)))

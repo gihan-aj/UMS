@@ -2,5 +2,5 @@
 
 namespace UMS.WebAPI.Contracts.Requests.Roles
 {
-    public record CreateRoleRequest(string Name, List<string> PermissionNames);
+    public record CreateRoleRequest(string Name, string? Description, List<string> PermissionNames);
 }
