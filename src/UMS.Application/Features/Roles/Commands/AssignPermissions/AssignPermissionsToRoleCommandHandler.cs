@@ -51,6 +51,14 @@ namespace UMS.Application.Features.Roles.Commands.AssignPermissions
                     ErrorType.Conflict));
             }
 
+            if (role.Name is "User")
+            {
+                return Result.Failure(new Error(
+                    "Role.CannotModifyDefaultUser",
+                    "The Default user role's permissions cannot be modified.",
+                    ErrorType.Conflict));
+            }
+
             // Get the requested set of permissions
             var requestedPermissions = await _permissionRepository.GetPermissionsByNameRangeAsync(command.PermissionNames, cancellationToken);
             var requestedPermssionIds = requestedPermissions

@@ -1,4 +1,4 @@
-﻿namespace UMS.Application.Features.Roles.Queries.ListQueries
+﻿namespace UMS.Application.Features.Roles.Queries.ListRoles
 {
     /// <summary>
     /// Response DTO containing basic role information.
