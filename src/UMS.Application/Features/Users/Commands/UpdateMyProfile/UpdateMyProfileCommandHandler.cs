@@ -6,6 +6,7 @@ using UMS.Application.Abstractions.Persistence;
 using UMS.Application.Abstractions.Services;
 using UMS.Application.Common.Messaging.Commands;
 using UMS.Application.Settings;
+using UMS.Domain.Users;
 using UMS.SharedKernel;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
@@ -50,6 +51,14 @@ namespace UMS.Application.Features.Users.Commands.UpdateMyProfile
                     "User.NotFound",
                     "Authenticated user could not be found.",
                     ErrorType.NotFound));
+            }
+
+            if (userToUpdate.IsDeleted)
+            {
+                return Result.Failure(new Error(
+                    "User.AccountDeleted",
+                    "This account is unavailable.",
+                    ErrorType.Conflict));
             }
 
             userToUpdate.UpdateProfile(

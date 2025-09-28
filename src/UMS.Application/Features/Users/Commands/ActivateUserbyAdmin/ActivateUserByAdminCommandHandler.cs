@@ -40,6 +40,14 @@ namespace UMS.Application.Features.Users.Commands.ActivateUserbyAdmin
                     ErrorType.NotFound));
             }
 
+            if (user.IsDeleted)
+            {
+                return Result.Failure(new Error(
+                    "User.AccountDeleted", 
+                    "This account is unavailable.", 
+                    ErrorType.Conflict));
+            }
+
             user.Activate(_currentUserService.UserId);
             _logger.LogInformation("User {UserId} activated by admin {AdminId}.", command.UserId, _currentUserService.UserId);
 

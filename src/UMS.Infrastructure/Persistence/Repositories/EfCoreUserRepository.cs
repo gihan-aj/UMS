@@ -45,6 +45,7 @@ namespace UMS.Infrastructure.Persistence.Repositories
             // Convert both sides to lower case for case-insensitive comparison.
             string lowerEmail = email.ToLowerInvariant();
             return await _dbContext.Users
+                .IgnoreQueryFilters()
                 .AnyAsync(u => u.Email.ToLower() == lowerEmail);
         }
 
@@ -55,9 +56,9 @@ namespace UMS.Infrastructure.Persistence.Repositories
                 return null; // Or throw ArgumentNullException based on contract preference
             }
 
-            // The .Users DbSet will automatically apply the HasQueryFilter(u => !u.IsDeleted)
             string lowerEmail = email.ToLowerInvariant();
             return await _dbContext.Users
+                .IgnoreQueryFilters()
                 .Include(u => u.RefreshTokens)
                 .Include(u => u.UserRoles)
                 .AsSplitQuery() // Improves performance

@@ -42,6 +42,14 @@ namespace UMS.Application.Features.Users.Commands.AssignRole
                     ErrorType.NotFound));
             }
 
+            if (user.IsDeleted)
+            {
+                return Result.Failure(new Error(
+                    "User.AccountDeleted",
+                    "This account is unavailable.",
+                    ErrorType.Conflict));
+            }
+
             var role = await _roleRepository.GetByIdAsync(request.RoleId);
             if (role == null)
             {

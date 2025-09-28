@@ -49,6 +49,11 @@ namespace UMS.Application.Features.Users.Commands.RegisterUser
             var existingUser = await _userRepository.GetByEmailAsync(command.Email);
             if (existingUser != null)
             {
+                if (existingUser.IsDeleted)
+                {
+                    //return Result.Failure<Guid>(new Error("User.AccountDeactivated", "This account has been deactivated. Please contact support.", ErrorType.Conflict));
+                    return Result.Failure<Guid>(new Error("User.AccountDeleted", "This email is unavailable.", ErrorType.Conflict));
+                }
                 return Result.Failure<Guid>(new Error("User.AlreadyExists", "User with this email already exists.", ErrorType.Conflict));
             }
 
