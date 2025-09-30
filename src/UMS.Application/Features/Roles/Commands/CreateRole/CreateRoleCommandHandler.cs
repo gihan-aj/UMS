@@ -52,7 +52,7 @@ namespace UMS.Application.Features.Roles.Commands.CreateRole
             // 2. Create the new role entity
             var newRoleId = await _sequenceGeneratorService.GetNextIdAsync<byte>("Roles", cancellationToken);
             var createdUserId = _currentUserService.UserId;
-            var newRole = Role.Create(newRoleId, command.Name, createdUserId);
+            var newRole = Role.Create(newRoleId, command.Name, command.Description, createdUserId);
 
             // Find valid permissions from the database based on the provided names
             var permissions = await _permissionRepository.GetPermissionsByNameRangeAsync(command.PermissionNames, cancellationToken);

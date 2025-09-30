@@ -24,6 +24,8 @@ namespace UMS.Application.Abstractions.Persistence
             string? searchTerm,
             CancellationToken cancellationToken = default);
 
+        Task<PagedList<Role>> ListAsync(PaginationQuery query, CancellationToken cancellationToken = default);
+
         Task<List<Role>?> GetAllAsync(CancellationToken cancellationToken);
 
         Task AddAsync(Role role, CancellationToken cancellationToken = default);

@@ -1,10 +1,12 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using UMS.Application.Abstractions.Persistence;
 using UMS.Application.Common.Messaging.Commands;
+using UMS.Application.Settings;
 using UMS.Domain.Users;
 using UMS.SharedKernel;
 
@@ -14,15 +16,18 @@ namespace UMS.Application.Features.Users.Commands.SetRoles
     {
         private readonly IUserRepository _userRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly AdminSettings _adminSettings;
         private readonly ILogger<SetUserRolesCommandHandler> _logger;
 
         public SetUserRolesCommandHandler(
             IUserRepository userRepository,
             IUnitOfWork unitOfWork,
+            IOptions<AdminSettings> adminSettings,
             ILogger<SetUserRolesCommandHandler> logger)
         {
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
+            _adminSettings = adminSettings.Value;
             _logger = logger;
         }
 
@@ -37,8 +42,16 @@ namespace UMS.Application.Features.Users.Commands.SetRoles
                     ErrorType.NotFound));
             }
 
+            if (user.IsDeleted)
+            {
+                return Result.Failure(new Error(
+                    "User.AccountDeleted",
+                    "This account is unavailable.",
+                    ErrorType.Conflict));
+            }
+
             // Prevent modification of the SuperAdmin's roles
-            if (user.Email.Equals("superadmin@ums.local", StringComparison.OrdinalIgnoreCase))
+            if (user.Email.Equals(_adminSettings.Email, StringComparison.OrdinalIgnoreCase))
             {
                 return Result.Failure(new Error(
                     "User.CannotModifySuperAdmin",

@@ -10,7 +10,7 @@ using UMS.Application.Features.Roles.Commands.DeleteRole;
 using UMS.Application.Features.Roles.Commands.UpdateRole;
 using UMS.Application.Features.Roles.Queries.GetAllRoles;
 using UMS.Application.Features.Roles.Queries.GetRoleById;
-using UMS.Application.Features.Roles.Queries.ListQueries;
+using UMS.Application.Features.Roles.Queries.ListRoles;
 using UMS.Domain.Authorization;
 using UMS.SharedKernel;
 using UMS.WebAPI.Common;
@@ -31,16 +31,14 @@ namespace UMS.WebAPI.Endpoints
                 .WithTags("Roles")
                 .WithApiVersionSet(apiVersionSet);
 
-            // GET /api/v1/roles
-            roleGroup.MapGet("/", async (
+            // GET /api/v1/roles/list
+            roleGroup.MapPost("/list", async (
                 ISender mediator,
-                CancellationToken cancellationToken,
-                [FromQuery] int page = 1,
-                [FromQuery] int pageSize = 10,
-                [FromQuery] string? searchTerm = null) =>
+                [FromBody] PaginationQuery query,
+                CancellationToken cancellationToken) =>
             {
-                var query = new ListRolesQuery(page, pageSize, searchTerm);
-                var result = await mediator.Send(query, cancellationToken);
+                var request = new ListRolesQuery(query);
+                var result = await mediator.Send(request, cancellationToken);
                 return result.ToHttpResult();
             })
                 .RequireAuthorization(Permissions.Roles.Read) // Protected by a permission
@@ -56,7 +54,7 @@ namespace UMS.WebAPI.Endpoints
                 ISender mediator,
                 CancellationToken cancellationToken) =>
             {
-                var command = new CreateRoleCommand(request.Name, request.PermissionNames);
+                var command = new CreateRoleCommand(request.Name, request.Description, request.PermissionNames);
                 var result = await mediator.Send(command, cancellationToken);
                 return result.ToHttpResult(
                     onSuccess: (roleId) => Results.CreatedAtRoute(
@@ -114,7 +112,7 @@ namespace UMS.WebAPI.Endpoints
                 ISender mediator,
                 CancellationToken cancellationToken) =>
             {
-                var command = new UpdateRoleCommand(id, request.Name, request.PermissionNames);
+                var command = new UpdateRoleCommand(id, request.Name, request.Description, request.PermissionNames);
                 var result = await mediator.Send(command, cancellationToken);
                 return result.ToHttpResult(onSuccess: () => Results.NoContent());
             })

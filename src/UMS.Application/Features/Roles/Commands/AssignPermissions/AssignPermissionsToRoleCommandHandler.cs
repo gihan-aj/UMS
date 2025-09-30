@@ -51,6 +51,14 @@ namespace UMS.Application.Features.Roles.Commands.AssignPermissions
                     ErrorType.Conflict));
             }
 
+            if (role.Name is "User")
+            {
+                return Result.Failure(new Error(
+                    "Role.CannotModifyDefaultUser",
+                    "The Default user role's permissions cannot be modified.",
+                    ErrorType.Conflict));
+            }
+
             // Get the requested set of permissions
             var requestedPermissions = await _permissionRepository.GetPermissionsByNameRangeAsync(command.PermissionNames, cancellationToken);
             var requestedPermssionIds = requestedPermissions
@@ -58,7 +66,7 @@ namespace UMS.Application.Features.Roles.Commands.AssignPermissions
                 .ToHashSet();
 
             // Get the current set of permission ids assigned to the role
-            var currentPermissionIds = role.Permissions.Select(rp => rp.PermissionId).ToHashSet();
+            var currentPermissionIds = role.RolePermissions.Select(rp => rp.PermissionId).ToHashSet();
 
             // Find permssions to add
             var permissionsIdsToAdd = requestedPermssionIds.Except(currentPermissionIds).ToList();
@@ -69,7 +77,7 @@ namespace UMS.Application.Features.Roles.Commands.AssignPermissions
             // Remove old permissions
             if(permissionsIdsToRemove.Any())
             {
-                var rolePermissionsToRemove = role.Permissions
+                var rolePermissionsToRemove = role.RolePermissions
                     .Where(rp => permissionsIdsToRemove.Contains(rp.PermissionId))
                     .ToList();
 

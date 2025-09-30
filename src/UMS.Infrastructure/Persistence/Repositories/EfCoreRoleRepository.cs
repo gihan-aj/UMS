@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Dynamic.Core;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -38,11 +40,33 @@ namespace UMS.Infrastructure.Persistence.Repositories
             return await PagedList<Role>.CreateAsync(query, page, pageSize, cancellationToken);
         }
 
+        public async Task<PagedList<Role>> ListAsync(PaginationQuery query, CancellationToken cancellationToken = default)
+        {
+            IQueryable<Role> rolesQuery = _dbContext.Roles.AsQueryable();
+
+            if(query.Filters != null && query.Filters.Any())
+            {
+                rolesQuery = ApplyFilters(rolesQuery, query.Filters);
+            }
+
+            if (!string.IsNullOrWhiteSpace(query.SortColumn))
+            {
+                var sortOrder = query.SortOrder?.ToLower() == "desc" ? "descending" : "ascending";
+                rolesQuery = rolesQuery.OrderBy($"{query.SortColumn} {sortOrder}");
+            }
+            else
+            {
+                rolesQuery = rolesQuery.OrderBy(r => r.Name);
+            }
+
+            return await PagedList<Role>.CreateAsync(rolesQuery, query.Page, query.PageSize, cancellationToken);
+        }
+
 
         public async Task<List<Role>?> GetAllAsync(CancellationToken cancellationToken)
         {
             return await _dbContext.Roles
-                .Include(r => r.Permissions)
+                .Include(r => r.RolePermissions)
                 .ThenInclude(rp => rp.Permission)
                 .ToListAsync(cancellationToken);
         } 
@@ -61,7 +85,7 @@ namespace UMS.Infrastructure.Persistence.Repositories
         {
             // Eagerly load the RolePermissions join entity, and then the associated Permission entity
             return await _dbContext.Roles
-                .Include(r => r.Permissions)
+                .Include(r => r.RolePermissions)
                     .ThenInclude(rp => rp.Permission)
                 .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
         }
@@ -106,5 +130,61 @@ namespace UMS.Infrastructure.Persistence.Repositories
                 .Select(p => p.Id)
                 .ToListAsync(cancellationToken);
         }
+
+        private IQueryable<Role> ApplyFilters(IQueryable<Role> query, List<Filter> filters)
+        {
+            if(filters == null || !filters.Any())
+            {
+                return query;
+            }
+
+            var whereClause = new StringBuilder();
+            var parameters = new List<object>();
+            var paramIndex = 0;
+
+            foreach (var filter in filters)
+            {
+                if(string.IsNullOrWhiteSpace(filter.ColumnName) || string.IsNullOrWhiteSpace(filter.Value))
+                {
+                    continue;
+                }
+
+                if(whereClause.Length > 0)
+                {
+                    whereClause.Append(" OR ");
+                }
+
+                string propertyName = filter.ColumnName;
+                string value = filter.Value;
+
+                switch (filter.Operator?.ToLower())
+                {
+                    case "contains":
+                        whereClause.Append($"{propertyName}.ToLower().Contains(@{paramIndex})");
+                        parameters.Add(value.ToLower());
+                        break;
+
+                    case "equals":
+                        whereClause.Append($"{propertyName} == @{paramIndex}");
+                        parameters.Add(value); // Needs conversion for non-string types
+                        break;
+
+                    default:
+                        // Default to contains for safety
+                        whereClause.Append($"{propertyName}.ToLower().Contains(@{paramIndex})");
+                        parameters.Add(value.ToLower());
+                        break;
+                }
+
+                paramIndex++;
+            }
+
+            if (whereClause.Length > 0)
+            {
+                return query.Where(whereClause.ToString(), parameters.ToArray());
+            }
+
+            return query;
+        } 
     }
 }

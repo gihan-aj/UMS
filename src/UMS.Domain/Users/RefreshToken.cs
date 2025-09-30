@@ -16,7 +16,7 @@ namespace UMS.Domain.Users
 
         public Guid UserId { get; private set; } // Foreign key to User
 
-        public virtual User User { get; private set; }
+        public virtual User? User { get; private set; }
 
         public string DeviceId { get; private set; } = null!; // Unique identifier for the device
 

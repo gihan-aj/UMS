@@ -56,8 +56,8 @@ namespace UMS.Infrastructure.Authentication
              var userPermissions = await _dbContext.UserRoles
                 .Where(ur => ur.UserId == user.Id)
                 .Include(ur => ur.Role)
-                .ThenInclude(ur => ur.Permissions)
-                .SelectMany(ur => ur.Role.Permissions)
+                .ThenInclude(ur => ur.RolePermissions)
+                .SelectMany(ur => ur.Role.RolePermissions)
                 .Select(rp => rp.Permission.Name)
                 .Distinct()
                 .ToListAsync();

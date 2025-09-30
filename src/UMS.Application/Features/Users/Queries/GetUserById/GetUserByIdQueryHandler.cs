@@ -37,7 +37,7 @@ namespace UMS.Application.Features.Users.Queries.GetUserById
 
             // Flatten all permissions from all roles, get distinct ones, and map them
             var distinctPermissions = user.UserRoles
-                .SelectMany(ur => ur.Role.Permissions.Select(rp => rp.Permission))
+                .SelectMany(ur => ur.Role.RolePermissions.Select(rp => rp.Permission))
                 .Distinct()
                 .Select(p => new PermissionDetailResponse(p.Name, GenerateDescription(p.Name)))
                 .OrderBy(p => p.Name)

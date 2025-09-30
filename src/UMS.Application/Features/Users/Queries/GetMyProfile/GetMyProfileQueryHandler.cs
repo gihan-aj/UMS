@@ -49,6 +49,14 @@ namespace UMS.Application.Features.Users.Queries.GetMyProfile
                     ErrorType.NotFound));
             }
 
+            if (user.IsDeleted)
+            {
+                return Result.Failure<UserProfileResponse>(new Error(
+                    "User.AccountDeleted",
+                    "This account is unavailable.",
+                    ErrorType.Conflict));
+            }
+
             var response = new UserProfileResponse(
                 user.Id,
                 user.UserCode,

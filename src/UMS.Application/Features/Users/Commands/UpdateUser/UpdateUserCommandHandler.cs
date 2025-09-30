@@ -7,6 +7,7 @@ using UMS.Application.Abstractions.Persistence;
 using UMS.Application.Abstractions.Services;
 using UMS.Application.Common.Messaging.Commands;
 using UMS.Application.Settings;
+using UMS.Domain.Users;
 using UMS.SharedKernel;
 
 namespace UMS.Application.Features.Users.Commands.UpdateUser
@@ -43,6 +44,14 @@ namespace UMS.Application.Features.Users.Commands.UpdateUser
                     "User.NotFound",
                     $"User with ID {command.UserId} not found.",
                     ErrorType.NotFound));
+            }
+
+            if (userToUpdate.IsDeleted)
+            {
+                return Result.Failure(new Error(
+                    "User.AccountDeleted",
+                    "This account is unavailable.",
+                    ErrorType.Conflict));
             }
 
             if (userToUpdate.Email.Equals(_adminSettings.Email, StringComparison.OrdinalIgnoreCase))

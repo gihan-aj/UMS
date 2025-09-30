@@ -54,13 +54,13 @@ namespace UMS.Application.UnitTests.Features.Roles.Commands
         {
             // --- Arrange ---
             // 1. Define the input for the test
-            var command = new CreateRoleCommand("ExistingRole", new List<string>());
+            var command = new CreateRoleCommand("ExistingRole", null, new List<string>());
 
             // 2. Set up the mock repository to simulate finding an existing role.
             // When GetByNameAsync is called with "ExistingRole", it should return a Role object
             _mockRoleRepository
                 .Setup(r => r.GetByNameAsync(command.Name, default))
-                .ReturnsAsync(Role.Create(1, "ExixstingRole", Guid.Empty));
+                .ReturnsAsync(Role.Create(1, "ExistingRole", null, Guid.Empty));
 
             // --- Act ---
             // 3. Execute the handler with the command
@@ -77,7 +77,7 @@ namespace UMS.Application.UnitTests.Features.Roles.Commands
         {
             // --- Arrange ---
             var permissionNames = new List<string> { "users:read", "roles:create" };
-            var command = new CreateRoleCommand("NewRole", permissionNames);
+            var command = new CreateRoleCommand("NewRole", null, permissionNames);
             byte newRoleId = 3;
 
             // 1. Simulate that no role with this name exists.

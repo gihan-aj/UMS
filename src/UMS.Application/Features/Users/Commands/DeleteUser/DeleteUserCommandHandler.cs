@@ -8,6 +8,7 @@ using UMS.Application.Abstractions.Persistence;
 using UMS.Application.Abstractions.Services;
 using UMS.Application.Common.Messaging.Commands;
 using UMS.Application.Settings;
+using UMS.Domain.Users;
 using UMS.SharedKernel;
 
 namespace UMS.Application.Features.Users.Commands.DeleteUser
@@ -40,6 +41,14 @@ namespace UMS.Application.Features.Users.Commands.DeleteUser
             if(userToDelete is null)
             {
                 return Result.Success();
+            }
+
+            if (userToDelete.IsDeleted)
+            {
+                return Result.Failure(new Error(
+                    "User.AccountDeleted",
+                    "This account is unavailable.",
+                    ErrorType.Conflict));
             }
 
             // Prevent deletion of the SuperAdmin account

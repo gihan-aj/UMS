@@ -44,6 +44,14 @@ namespace UMS.Application.Features.Users.Commands.DeactivateUserByAdmin
                     ErrorType.NotFound));
             }
 
+            if (user.IsDeleted)
+            {
+                return Result.Failure(new Error(
+                    "User.AccountDeleted",
+                    "This account is unavailable.",
+                    ErrorType.Conflict));
+            }
+
             if (user.Email.Equals(_adminSettings.Email, StringComparison.OrdinalIgnoreCase))
             {
                 return Result.Failure(new Error(

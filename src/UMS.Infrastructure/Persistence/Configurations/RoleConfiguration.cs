@@ -16,10 +16,13 @@ namespace UMS.Infrastructure.Persistence.Configurations
 
             builder.Property(r => r.Name)
                 .IsRequired()
-                .HasMaxLength(100);
+                .HasMaxLength(40);
 
             builder.HasIndex(r => r.Name)
                 .IsUnique();
+
+            builder.Property(r => r.Description)
+                .HasMaxLength(100);
 
             builder.Property(r => r.IsDeleted)
                 .IsRequired()
@@ -38,7 +41,7 @@ namespace UMS.Infrastructure.Persistence.Configurations
             // EF Core will handle this relationship through the RolePermission configuration.
             // builder.Ignore(r => r.Permissions);
 
-            builder.HasMany(r => r.Permissions)
+            builder.HasMany(r => r.RolePermissions)
                 .WithOne()
                 .HasForeignKey(rp => rp.RoleId)
                 .IsRequired();
