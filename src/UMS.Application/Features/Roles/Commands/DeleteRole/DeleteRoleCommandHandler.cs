@@ -38,7 +38,20 @@ namespace UMS.Application.Features.Roles.Commands.DeleteRole
             if(role.Name is "SuperAdmin" or "User")
             {
                 _logger.LogWarning("Attempt to delete system role '{RoleName}' by user {UserId}.", role.Name, _currentUserService.UserId);
-                return Result.Failure(new Error("Role.CannotDeleteSystemRole", $"System role '{role.Name}' cannot be deleted.", ErrorType.Conflict));
+                return Result.Failure(new Error(
+                    "Role.CannotDeleteSystemRole", 
+                    $"System role '{role.Name}' cannot be deleted.", 
+                    ErrorType.Forbidden));
+            }
+
+            // --- SECURITY CHECK ---
+            if (_currentUserService.RoleNames.Contains(role.Name))
+            {
+                _logger.LogWarning("Security violation: User {UserId} attempted to delete their own role '{RoleName}'.", _currentUserService.UserId, role.Name);
+                return Result.Failure(new Error(
+                    "Role.CannotModifyOwnRole", 
+                    "You cannot delete a role that you are currently assigned to.", 
+                    ErrorType.Forbidden));
             }
 
             bool isRoleInUse = await _roleRepository.IsRoleAssignedToUsersAsync(request.Id, cancellationToken);

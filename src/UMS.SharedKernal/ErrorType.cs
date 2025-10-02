@@ -17,6 +17,7 @@
         Unauthorized = 4,
         /// <summary>A conflict with the current state of a resource.</summary>
         Conflict = 5,
-        // Add other specific error types as needed
+        /// <summary>A forbidden action.</summary>
+        Forbidden = 6,   
     }
 }

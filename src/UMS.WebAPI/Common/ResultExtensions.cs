@@ -65,6 +65,12 @@ namespace UMS.WebAPI.Common
                                         title: "Unauthorized",
                                         extensions: new Dictionary<string, object?> { { "errorCode", error.Code } }
                                     ),
+                ErrorType.Forbidden => Results.Problem(
+                                        detail: error.Message,
+                                        statusCode: StatusCodes.Status403Forbidden,
+                                        title: "Forbidden",
+                                        extensions: new Dictionary<string, object?> { { "errorCode", error.Code } }
+                                    ),
                 ErrorType.Failure => Results.Problem(
                                         detail: error.Message,
                                         statusCode: StatusCodes.Status500InternalServerError,
@@ -90,6 +96,7 @@ namespace UMS.WebAPI.Common
             ErrorType.Validation => StatusCodes.Status400BadRequest,
             ErrorType.NotFound => StatusCodes.Status404NotFound,
             ErrorType.Conflict => StatusCodes.Status409Conflict,
+            ErrorType.Forbidden => StatusCodes.Status403Forbidden,
             ErrorType.Unauthorized => StatusCodes.Status401Unauthorized,
             ErrorType.Failure => StatusCodes.Status500InternalServerError,
             _ => StatusCodes.Status500InternalServerError,
@@ -101,6 +108,7 @@ namespace UMS.WebAPI.Common
             ErrorType.NotFound => "Resource Not Found",
             ErrorType.Conflict => "Conflict Error",
             ErrorType.Unauthorized => "Unauthorized Access",
+            ErrorType.Forbidden => "Forbidden Action",
             ErrorType.Failure => "Internal Server Error",
             _ => "An Error Occurred",
         };

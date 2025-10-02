@@ -44,6 +44,16 @@ namespace UMS.Application.Features.Roles.Commands.UpdateRole
                     ErrorType.NotFound));
             }
 
+            // Security check
+            if(_currentUserService.RoleNames.Contains(role.Name))
+            {
+                _logger.LogWarning("Security violation: User {UserId} attempted to update their own role '{RoleName}'.", _currentUserService.UserId, role.Name);
+                return Result.Failure(new Error(
+                    "Role.CannotModifyOwnRole", 
+                    "You cannot modify a role that you are currently assigned to.", 
+                    ErrorType.Forbidden));
+            }
+
             // Check if another role already has the new name
             if(!role.Name.Equals(command.NewName, StringComparison.OrdinalIgnoreCase))
             {
@@ -60,7 +70,10 @@ namespace UMS.Application.Features.Roles.Commands.UpdateRole
             if (role.Name is "SuperAdmin" or "User")
             {
                 _logger.LogWarning("Attempt to update system role '{RoleName}' by user {UserId}.", role.Name, _currentUserService.UserId);
-                return Result.Failure(new Error("Role.CannotUpdateSystemRole", $"System role '{role.Name}' cannot be updated.", ErrorType.Conflict));
+                return Result.Failure(new Error(
+                    "Role.CannotUpdateSystemRole", 
+                    $"System role '{role.Name}' cannot be updated.", 
+                    ErrorType.Forbidden));
             }
 
             role.Update(command.NewName, command.Description, _currentUserService.UserId);

@@ -43,7 +43,17 @@ namespace UMS.Application.Features.Roles.Commands.AssignPermissions
                     ErrorType.NotFound));
             }
 
-            if(role.Name is "SuperAdmin")
+            // --- SECURITY CHECK ---
+            if (_currentUserService.RoleNames.Contains(role.Name))
+            {
+                _logger.LogWarning("Security violation: User {UserId} attempted to change permissions on their own role '{RoleName}'.", _currentUserService.UserId, role.Name);
+                return Result.Failure(new Error(
+                    "Role.CannotModifyOwnRole", 
+                    "You cannot change permissions on a role that you are currently assigned to.", 
+                    ErrorType.Forbidden));
+            }
+
+            if (role.Name is "SuperAdmin")
             {
                 return Result.Failure(new Error(
                     "Role.CannotModifySuperAdmin",

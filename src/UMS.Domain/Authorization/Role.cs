@@ -37,7 +37,7 @@ namespace UMS.Domain.Authorization
 
         public void Update(string newName, string? description, Guid? modifiedByUserId)
         {
-            if (string.IsNullOrWhiteSpace(newName) || newName.Equals(Name, StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrWhiteSpace(newName))
             {
                 return;
             }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace UMS.Application.Abstractions.Services
 {
@@ -19,6 +20,9 @@ namespace UMS.Application.Abstractions.Services
         /// </summary>
         string? UserEmail { get; }
 
-        // Could add other properties like IsAuthenticated, roles, etc.
+        /// <summary>
+        /// A set of the current user's role names for fast lookups.
+        /// </summary>
+        HashSet<string> RoleNames { get; }
     }
 }
