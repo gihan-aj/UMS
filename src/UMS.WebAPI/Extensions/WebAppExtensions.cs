@@ -39,6 +39,7 @@ namespace UMS.WebAPI.Extensions
             }
 
             app.UseHttpsRedirection();
+            app.UseRouting();
             app.UseCors("_myAllowSpecificOrigins");
 
             // Add IdentityServer to the pipeline. It handles its own routing.
@@ -54,6 +55,11 @@ namespace UMS.WebAPI.Extensions
 
         public static WebApplication MapApiEndpoints(this WebApplication app)
         {
+            // Map conventional MVC routes for our AccountController
+            app.MapControllerRoute(
+                name: "default",
+                pattern: "{controller=Home}/{action=Index}/{id?}");
+
             app.MapAuthApiEndpoints();
             app.MapUserApiEndpoints();
             app.MapRoleApiEndpoints();

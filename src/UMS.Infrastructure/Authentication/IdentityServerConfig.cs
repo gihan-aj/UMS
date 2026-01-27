@@ -6,6 +6,15 @@ namespace UMS.Infrastructure.Authentication
 {
     public static class IdentityServerConfig
     {
+        // https://localhost:7026/connect/authorize?client_id=angular_client&response_type=code&scope=openid%20profile%20ums_api.full_access&redirect_uri=https://localhost:4200/auth-callback
+        // Defines standard identity scopes
+        public static IEnumerable<IdentityResource> GetIdentityResources() =>
+            new List<IdentityResource>
+            {
+                new IdentityResources.OpenId(),    // This enables OpenID Connect and provides the 'sub' (subject ID) claim.
+                new IdentityResources.Profile(),   // This provides standard profile claims like name, email, etc.
+            };
+
         // Defines the APIs that IdentityServer will protect.
         public static IEnumerable<ApiResource> GetApiResources() =>
             new List<ApiResource>
@@ -43,7 +52,7 @@ namespace UMS.Infrastructure.Authentication
                     ClientId = "angular_client",
                     ClientName = "Angular Frontend",
                     AllowedGrantTypes = GrantTypes.Code,// The most secure interactive flow (Authorization Code Flow with PKCE)
-                    RequirePkce = true,
+                    RequirePkce = false, // For testing, after development, set this to true
                     RequireClientSecret = false, // Public clients like SPAs don't use a secret
 
                     RedirectUris = { "https://localhost:4200/auth-callback" }, // Where to redirect after login

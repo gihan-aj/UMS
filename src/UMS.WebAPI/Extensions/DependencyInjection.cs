@@ -57,6 +57,7 @@ namespace UMS.WebAPI.Extensions
                 {
                     // Configure cookie options if needed
                     options.LoginPath = "/Account/Login"; // Example path to a login page
+                    options.LogoutPath = "/Account/Logout"; // Example path to a logout page
                 })
                 // Add the JWT Bearer handler for protecting APIs.
                 .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>

@@ -140,8 +140,10 @@ namespace UMS.Infrastructure
                 {
                     options.KeyManagement.Enabled = false;
                 })
-                .AddInMemoryApiResources(IdentityServerConfig.GetApiResources())
+                .AddDeveloperSigningCredential() // For development only!
+                .AddInMemoryIdentityResources(IdentityServerConfig.GetIdentityResources())
                 .AddInMemoryApiScopes(IdentityServerConfig.GetApiScopes())
+                .AddInMemoryApiResources(IdentityServerConfig.GetApiResources())
                 .AddInMemoryClients(IdentityServerConfig.GetClients())
                 .AddOperationalStore(options =>
                 {
@@ -150,9 +152,8 @@ namespace UMS.Infrastructure
                             sql => sql.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName));
 
                 })
-                .AddResourceOwnerValidator<ResourceOwnerPasswordValidator>()
                 .AddProfileService<ProfileService>()
-                .AddDeveloperSigningCredential();
+                .AddResourceOwnerValidator<ResourceOwnerPasswordValidator>();
 
             return services;
         }
